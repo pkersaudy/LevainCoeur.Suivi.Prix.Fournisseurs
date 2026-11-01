@@ -1,0 +1,8 @@
+v1	2026-11	ecriture	reviewer	sonnet	1	3	1745	46408	8378
+v1	2026-11	extraction	reviewer	sonnet	3	7	4848	128911	23273
+v1	2026-11	normalisation	reviewer	sonnet	1	1	776	20626	3724
+v1	2026-11	rapprochement	reviewer	sonnet	3	5	3684	97973	17687
+v1	2026-11	ecriture	writer	opus	2	5	2423	128162	7076
+v1	2026-11	extraction	writer	opus	7	14	6731	356004	19655
+v1	2026-11	normalisation	writer	opus	1	2	1077	56961	3145
+v1	2026-11	rapprochement	writer	opus	5	11	5116	270563	14937
