@@ -7,3 +7,6 @@ Pourquoi : les regex de `pipeline/extractors/pdf_extractors.py` (Minoterie, Sub�
 les factures de juin 2026, et `_map_unite` de `facturx_extractor.py` n'a vu aucun vrai code d'unité.
 
 Où : à mesurer sur les 9 factures de juin 2026 avant de bâtir l'interface dessus.
+
+À mesurer au passage : `SEUIL_AUTO` accepte sans question ; les sels proches restent-ils séparés (règle de `product.md`)
+? Les 9 factures ne sont pas dans le repo : `factures_a_traiter/` est absent.

@@ -1,5 +1,8 @@
 # Agent instructions
 
+Les échanges avec l'humain se font en français. La langue du code est dans
+[sdd/coding-style.md](sdd/coding-style.md).
+
 <!-- sdd-fabrik -->
 ## SDD-Fabrik
 

@@ -6,3 +6,6 @@ Pourquoi : son `factur-x.xml` est au profil minimum, sans lignes d'articles (fac
 lire le texte du PDF comme pour Minoterie. Le routeur actuel ne doit pas l'envoyer à l'extracteur Factur-X.
 
 Où : `pipeline/extractors/`, `pipeline/router.py`.
+
+Le routeur va plus loin que la décision 2 : `pipeline/extractors/facturx_extractor.py:31` choisit Factur-X sur le seul
+nom de fichier (`facturx`, `_fx`), sans lire le profil.
