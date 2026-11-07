@@ -1,0 +1,20 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Données générées (garder sous la main mais hors versionnement)
+data/embeddings_cache.parquet
+data/a_valider.csv
+
+# PDF déposés à traiter
+factures_a_traiter/*.pdf
+
+# OS / éditeurs
+.DS_Store
+.idea/
+.vscode/
