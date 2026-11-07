@@ -1,0 +1,13 @@
+#!/bin/sh
+# SDD-Fabrik token ledger: what agents spent on each module, by month, with no link to a commit or a person.
+# See sdd/WORKFLOW.md.
+# Python 3.10 or later, as python3, python or py -3. Windows answers python3 with a stub that fails until Python is
+# installed: the version check skips it.
+for python in python3 python 'py -3'; do
+  $python -c 'import sys; sys.exit(sys.version_info < (3, 10))' > /dev/null 2>&1 &&
+    exec $python -B "$(dirname "$0")/fabrik" ledger "$@"
+done
+# Without Python, the ledger notes nothing, and never stops a commit or a push.
+case ${1:-} in record | sync) exit 0 ;; esac
+echo 'SDD-Fabrik needs Python 3.10 or later: install it (https://www.python.org/downloads/), then try again.' >&2
+exit 1

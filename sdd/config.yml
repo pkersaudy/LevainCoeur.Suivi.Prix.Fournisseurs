@@ -1,0 +1,30 @@
+# This repo's settings for SDD-Fabrik, read at each commit. The kit never replaces this file. A contract's front
+# matter sets the same keys for its module. Uncomment a line to change its default.
+
+# Lines of code and tests an agent batch may change.
+batch-lines: 400
+
+# low: no quiz on code. intent: a quiz only when the contract moves, with its governs and depends. normal: one to
+# three questions. high, where a mistake costs much (an API contract, security, personal data, money): three or more,
+# citing every hunk of code, and a second human's reading is recommended.
+# risk: normal
+
+# Files a batch asks a quiz on at any risk: a path, a folder ending with /, or /a regular expression/ found in the
+# path, one on the key's line or one per "- " line. A contract's list adds to this one. Set, even empty, it replaces
+# the kit's list below; sensitive: [] lists none.
+# sensitive:
+#   - sdd/bin/
+#   - sdd/WORKFLOW.md
+#   - sdd/guide/
+#   - sdd/config.yml
+#   - /(?i)(^|/)(agents|claude)\.md$/
+#   - sdd/architecture.md
+#   - sdd/coding-style.md
+#   - sdd/product.md
+#   - sdd/modules/
+#   - .github/workflows/
+#   - .gitlab-ci.yml
+#   - .claude/
+#   - opencode.json
+#   - kilo.jsonc
+#   - .vscode/settings.json

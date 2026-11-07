@@ -1,0 +1,18 @@
+name: SDD
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Drift and batch size of each new commit
+        run: bash sdd/bin/sdd audit --range "$BASE..$TIP"
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          TIP: ${{ github.event.pull_request.head.sha || github.sha }}

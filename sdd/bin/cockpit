@@ -1,0 +1,13 @@
+#!/bin/sh
+# SDD-Fabrik cockpit: where a dev's agent tokens go, read from the agents' own logs on this machine. Nothing leaves it
+# but what the token ledger asks for. See sdd/WORKFLOW.md.
+# Python 3.10 or later, as python3, python or py -3. Windows answers python3 with a stub that fails until Python is
+# installed: the version check skips it.
+for python in python3 python 'py -3'; do
+  $python -c 'import sys; sys.exit(sys.version_info < (3, 10))' > /dev/null 2>&1 &&
+    exec $python -B "$(dirname "$0")/fabrik" cockpit "$@"
+done
+# Without it, what the ledger asks and the hints say nothing: they are advice.
+case ${1:-} in usage | hints) exit 0 ;; esac
+echo 'SDD-Fabrik needs Python 3.10 or later: install it (https://www.python.org/downloads/), then try again.' >&2
+exit 1
