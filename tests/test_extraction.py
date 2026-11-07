@@ -6,7 +6,7 @@ import pytest
 
 from pipeline.extractors import facturx_extractor, pdf_extractors
 from pipeline.extractors.facturx_extractor import FacturXExtractor
-from pipeline.extractors.pdf_extractors import MinoterieExtractor, SuberyExtractor
+from pipeline.extractors.pdf_extractors import CremerieExtractor, MinoterieExtractor, SuberyExtractor
 
 PDF = Path("facture.pdf")
 
@@ -86,6 +86,31 @@ def test_minoterie_prend_la_date_de_facture_et_non_l_echeance(texte_pdf):
 
     assert facture.date_prix == "21/10/2026"
     assert facture.lignes[0].prix_unitaire_ht == 0.795
+
+
+def test_cremerie_reconnue_a_son_adresse_mail_et_lignes_dedoublonnees(texte_pdf):
+    lignes = [
+        "Email : cremeriedelarance@live.fr",
+        "La Ferme de la Renaudais",
+        "Facture FA00006844 du : 29/10/2026 BOULANGERIE LEVAIN COEUR",
+        "Le 29/10/2026",
+        "Code Description Unité Qté P.U. HT Montant HT TVA",
+        "L1 LAIT ENTIERPASTEURISE Litre 40,00 0,80 32,00 5,50",
+        "F1 FROMAGE BLANC EN 3-5 ou 10 KG Kg 6,00 3,40 20,40 5,50",
+        "0,00 0,00 0,00 0,00",
+        "L1 LAIT ENTIERPASTEURISE Litre 30,00 0,80 24,00 5,50",
+    ]
+    texte_pdf(lignes)
+
+    extracteur = CremerieExtractor()
+    assert extracteur.peut_traiter(PDF, "\n".join(lignes))
+    facture = extracteur.extraire(PDF)
+
+    assert facture.date_prix == "29/10/2026"
+    assert [(l.designation, l.prix_unitaire_ht, l.unite) for l in facture.lignes] == [
+        ("LAIT ENTIERPASTEURISE", 0.80, "L"),
+        ("FROMAGE BLANC EN 3-5 ou 10 KG", 3.40, "kg"),
+    ]
 
 
 def test_transgourmet_prend_l_unite_dans_le_texte_du_pdf(texte_pdf, monkeypatch):

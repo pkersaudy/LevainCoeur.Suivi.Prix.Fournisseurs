@@ -118,7 +118,7 @@ class SuberyExtractor(_PdfBase):
 
 class CremerieExtractor(_PdfBase):
     nom_fournisseur = "Crèmerie de la Rance"
-    marqueur = "Cr" + "\u00e8" + "merie"  # "Crèmerie" (robuste à l'accent)
+    marqueur = "cremeriedelarance"  # l'adresse mail : le nom, dans le logo, n'est pas dans le texte
     # Code Description Unité(Litre/Kg) Qté PU_HT Montant TVA
     RE_LIGNE = re.compile(
         rf"^(?P<code>[A-Z]\d+)\s+(?P<des>.+?)\s+(?P<unite>Litre|Kg|Pièce|Piece)\s+"

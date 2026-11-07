@@ -16,6 +16,8 @@ Hors du module : convertir les unités, reconnaître la matière, les factures s
   [test_minoterie_prend_la_date_de_facture_et_non_l_echeance](../../tests/test_extraction.py).
 - Une ligne Transgourmet porte l'unité facturée de son PDF, et `unité` si elle n'y figure pas :
   [test_transgourmet_prend_l_unite_dans_le_texte_du_pdf](../../tests/test_extraction.py).
+- La facture de la Crèmerie, dont le nom n'est que dans le logo, est reconnue, et ses lignes répétées ne comptent qu'une
+  fois : [test_cremerie_reconnue_a_son_adresse_mail_et_lignes_dedoublonnees](../../tests/test_extraction.py).
 - Un PDF qu'aucun extracteur ne reconnaît donne un message qui nomme le fichier, et les autres factures du lot passent ;
   à vérifier à la main.
 

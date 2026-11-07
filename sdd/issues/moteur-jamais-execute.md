@@ -21,7 +21,7 @@ Où : `factures_a_traiter/`, non versionné.
 ## Reste à mesurer ou à bâtir
 
 - Rapprochement : mesuré avec Claude Haiku 5.5, voir [candidats manquants](candidats-manquants.md).
-- Les 2 PDF non lus : [Crèmerie](cremerie-non-reconnue.md) et [Distralis](extracteur-distralis.md).
+- Le PDF non lu : [Distralis](extracteur-distralis.md).
 - Subéry : les poids de ligne ne servent pas, `Courge Potimarron 15 Pièces` reste à 1,04 la pièce pour 1,30 €/kg réel.
 - Normalisation : `SAUCISSE TOULOUSE VPF 125G X 8`, une barquette de 1 kg à 8,98 €, donne 71,85 €/kg
   ([issue](normalisation-incomplete.md)).
