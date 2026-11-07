@@ -6,62 +6,62 @@ from __future__ import annotations
 
 import json
 import os
-import re
 
+import anthropic
 from dotenv import load_dotenv
 
-from config import LLM_API_KEY_ENV, LLM_MAX_RETRIES, LLM_MODEL, LLM_TIMEOUT_S, ROOT
+from config import LLM_API_KEY_ENV, LLM_MAX_RETRIES, LLM_MAX_TOKENS, LLM_MODEL, LLM_TIMEOUT_S, ROOT
 
 load_dotenv(ROOT / ".env")
+
+SYSTEME = """Tu es un expert en réconciliation de matières premières pour une boulangerie.
+On te donne un libellé de facture fournisseur et une liste de matières candidates de la base.
+Choisis la matière qui correspond, ou réponds "AUCUNE" si aucune ne convient.
+Règle importante : "Sel de Guérande", "Sel fin", "Gros sel" sont des sels DIFFÉRENTS.
+"""
 
 
 class LlmIndisponible(Exception):
     """Le service LLM ne répond pas : la décision revient au boulanger."""
 
 
-def _api_key() -> str | None:
-    for var in LLM_API_KEY_ENV:
-        v = os.getenv(var)
-        if v:
-            return v
-    return None
-
-
-SYSTEME = """Tu es un expert en reconciliation de matieres premieres pour une boulangerie.
-On te donne un libelle de facture fournisseur et une liste de matieres candidates de la base.
-Choisis la matiere qui correspond, ou reponds "AUCUNE" si aucune ne convient.
-Regle importante : "Sel de Guerande", "Sel fin", "Gros sel" sont des sels DIFFERENTS.
-Reponds UNIQUEMENT en JSON: {"matiere_matched": "<nom exact d'un candidat ou AUCUNE>", "confiance": 0.0-1.0}
-"""
-
-
 def arbitrer_llm(libelle: str, candidats: list[str], categorie: str = "") -> tuple[str | None, float]:
     """Retourne (canonique choisi ou None, confiance)."""
-    key = _api_key()
+    key = os.getenv(LLM_API_KEY_ENV)
     if not key:
-        raise RuntimeError(f"Cle API absente. Definissez une des variables {LLM_API_KEY_ENV} dans .env")
+        raise RuntimeError(f"Clé API absente. Définissez {LLM_API_KEY_ENV} dans .env")
 
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    from langchain_google_genai.chat_models import GoogleAPIError
-
-    llm = ChatGoogleGenerativeAI(
-        model=LLM_MODEL, google_api_key=key, timeout=LLM_TIMEOUT_S, max_retries=LLM_MAX_RETRIES
-    )
-    entree = f"Libelle facture : {libelle}\nCategorie probable : {categorie}\nCandidats : {candidats}"
+    client = anthropic.Anthropic(api_key=key, timeout=LLM_TIMEOUT_S, max_retries=LLM_MAX_RETRIES)
+    entree = f"Libellé facture : {libelle}\nCatégorie probable : {categorie}\nCandidats : {candidats}"
     try:
-        resp = llm.invoke([("system", SYSTEME), ("human", entree)])
-    except GoogleAPIError as e:
+        reponse = client.messages.create(
+            model=LLM_MODEL,
+            max_tokens=LLM_MAX_TOKENS,
+            system=SYSTEME,
+            messages=[{"role": "user", "content": entree}],
+            output_config={"format": {"type": "json_schema", "schema": _schema_reponse(candidats)}},
+        )
+    except anthropic.APIError as e:
         raise LlmIndisponible(str(e)) from e
 
-    m = re.search(r"\{.*\}", resp.text, re.DOTALL)
-    if not m:
+    if reponse.stop_reason != "end_turn":  # réponse coupée ou refusée : pas de JSON à lire
         return None, 0.0
-    try:
-        data = json.loads(m.group(0))
-    except json.JSONDecodeError:
-        return None, 0.0
-    choix = data.get("matiere_matched")
-    conf = float(data.get("confiance", 0.0))
-    if not choix or choix.upper() == "AUCUNE" or choix not in candidats:
+    data = json.loads(next(bloc.text for bloc in reponse.content if bloc.type == "text"))
+    choix = data["matiere_matched"]
+    conf = float(data["confiance"])
+    if choix not in candidats:
         return None, conf
     return choix, conf
+
+
+def _schema_reponse(candidats: list[str]) -> dict:
+    """Schéma JSON qui limite la réponse aux candidats, ou à AUCUNE."""
+    return {
+        "type": "object",
+        "properties": {
+            "matiere_matched": {"type": "string", "enum": [*candidats, "AUCUNE"]},
+            "confiance": {"type": "number"},
+        },
+        "required": ["matiere_matched", "confiance"],
+        "additionalProperties": False,
+    }

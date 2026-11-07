@@ -1,11 +1,12 @@
 """Arbitrage LLM, sans appel au service."""
 
+from types import SimpleNamespace
+
+import anthropic
 import pandas as pd
 import pytest
-from langchain_core.messages import AIMessage
-from langchain_google_genai import chat_models
 
-from pipeline import llm, matcher
+from pipeline import matcher
 from pipeline.llm import arbitrer_llm
 
 
@@ -19,49 +20,54 @@ class IndexFactice:
         return [("Carottes", 0.7)]
 
 
-class ErreurService(chat_models.GoogleAPIError):
-    def __init__(self):
-        Exception.__init__(self, "503 UNAVAILABLE")
+def reponse(texte):
+    """Réponse complète du service : Haiku 5.5 peut la faire précéder d'un bloc de réflexion."""
+    blocs = [SimpleNamespace(type="thinking", thinking=""), SimpleNamespace(type="text", text=texte)]
+    return SimpleNamespace(stop_reason="end_turn", content=blocs)
 
 
 @pytest.fixture
 def service(monkeypatch):
-    """Remplace le client Gemini par un `invoke` donné, et compte ses appels."""
+    """Remplace le client Anthropic par un `create` donné, et compte ses appels."""
     appels = []
 
-    def poser(invoke):
+    def poser(create):
         class ClientFactice:
             def __init__(self, **_):
-                pass
+                self.messages = SimpleNamespace(create=self.create)
 
-            def invoke(self, messages):
-                appels.append(messages)
-                return invoke()
+            def create(self, **requete):
+                appels.append(requete)
+                return create()
 
-        monkeypatch.setattr(chat_models, "ChatGoogleGenerativeAI", ClientFactice)
-        monkeypatch.setattr("langchain_google_genai.ChatGoogleGenerativeAI", ClientFactice)
-        monkeypatch.setenv("GEMINI_API_KEY", "factice")
+        monkeypatch.setattr(anthropic, "Anthropic", ClientFactice)
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "factice")
         return appels
 
     return poser
 
 
-def test_lit_une_reponse_en_blocs_de_contenu(service):
-    bloc = {"type": "text", "text": '{"matiere_matched": "Carottes", "confiance": 0.9}'}
-    service(lambda: AIMessage(content=[bloc]))
+def test_lit_la_reponse_apres_le_bloc_de_reflexion(service):
+    service(lambda: reponse('{"matiere_matched": "Carottes", "confiance": 0.9}'))
 
     assert arbitrer_llm("Carotte Lavée 5 kg", ["Carottes", "Rhurbarbe"]) == ("Carottes", 0.9)
 
 
 def test_ignore_une_reponse_hors_des_candidats(service):
-    service(lambda: AIMessage(content='{"matiere_matched": "Panais", "confiance": 0.9}'))
+    service(lambda: reponse('{"matiere_matched": "Panais", "confiance": 0.9}'))
 
     assert arbitrer_llm("Panais 5 kg", ["Carottes"]) == (None, 0.9)
 
 
+def test_ignore_une_reponse_coupee(service):
+    service(lambda: SimpleNamespace(stop_reason="max_tokens", content=[]))
+
+    assert arbitrer_llm("Panais 5 kg", ["Carottes"]) == (None, 0.0)
+
+
 def test_service_indisponible_envoie_le_lot_en_revue_sans_rappeler(service, monkeypatch):
     def echec():
-        raise ErreurService
+        raise anthropic.APIConnectionError(request=None)
 
     appels = service(echec)
     monkeypatch.setattr(matcher, "IndexSemantique", IndexFactice)
@@ -72,14 +78,6 @@ def test_service_indisponible_envoie_le_lot_en_revue_sans_rappeler(service, monk
 
     assert [r.statut for r in resultats] == ["review", "review"]
     assert len(appels) == 1
-
-
-def test_le_prompt_systeme_passe_sans_gabarit(service):
-    appels = service(lambda: AIMessage(content="AUCUNE"))
-
-    arbitrer_llm("Libellé {avec} accolades", ["Carottes"])
-
-    assert appels[0][0] == ("system", llm.SYSTEME)
 
 
 COLONNES = ["Matière première", "Catégorie Matière première", "Alias fournisseur", "Matière de base"]

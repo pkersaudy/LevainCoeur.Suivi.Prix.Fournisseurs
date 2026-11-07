@@ -26,7 +26,7 @@ et ajoutés à l'index. On ne ré-encode jamais tout.
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-echo "GEMINI_API_KEY=votre_cle" > .env      # pour le fallback LLM
+echo "ANTHROPIC_API_KEY=votre_cle" > .env      # pour le fallback LLM
 ```
 
 ## Utilisation
@@ -63,7 +63,7 @@ pipeline/
   router.py               détection fournisseur -> extracteur
   matcher.py              cascade alias -> embeddings -> LLM -> revue
   embeddings.py           index sémantique + cache incrémental
-  llm.py                  fallback Gemini (short-list RAG)
+  llm.py                  fallback Claude Haiku (short-list RAG)
   normalize.py            prix -> €/kg
   writer.py               écriture base + file de revue
   extractors/             un extracteur par fournisseur

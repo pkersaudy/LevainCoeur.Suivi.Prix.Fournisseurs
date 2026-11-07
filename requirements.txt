@@ -11,7 +11,6 @@ numpy>=1.26
 # Matching semantique (local, gratuit)
 sentence-transformers>=3.0
 
-# LLM de secours (au choix de votre pipeline actuel)
-langchain-google-genai>=2.0
-langchain-core>=1.0
+# LLM de secours
+anthropic>=2.0
 python-dotenv>=1.0

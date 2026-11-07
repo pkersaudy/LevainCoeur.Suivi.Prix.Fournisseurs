@@ -25,8 +25,9 @@ SEUIL_LLM = 0.55  # cosinus entre SEUIL_LLM et SEUIL_AUTO : on demande au LLM
 # cosinus < SEUIL_LLM : direct file de revue (probablement "new")
 
 # --- LLM de secours ---
-LLM_MODEL = "gemini-3.8-flash"
-LLM_API_KEY_ENV = ("GEMINI_API_KEY", "GOOGLE_API_KEY")  # on essaie ces variables dans l'ordre
+LLM_MODEL = "claude-haiku-5-5"
+LLM_API_KEY_ENV = "ANTHROPIC_API_KEY"
+LLM_MAX_TOKENS = 1024  # la réflexion du modèle compte dedans
 LLM_TIMEOUT_S = 30  # au-delà, le service est tenu pour indisponible
 LLM_MAX_RETRIES = 2  # une surcharge (503) passe souvent à la relance ; le défaut relance plus de 9 min
 

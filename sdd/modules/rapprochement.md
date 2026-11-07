@@ -18,4 +18,5 @@ Hors du module : extraire le libellé, convertir le prix, écrire quoi que ce so
 - Sel de Guérande, sel fin et gros sel restent trois matières ; à vérifier à la main.
 
 Écarts connus : [alias sans fournisseur](../issues/alias-sans-fournisseur.md),
-[clé LLM absente en cours de lot](../issues/cle-llm-jamais-lue.md).
+[clé LLM absente en cours de lot](../issues/cle-llm-jamais-lue.md),
+[candidats manquants](../issues/candidats-manquants.md).

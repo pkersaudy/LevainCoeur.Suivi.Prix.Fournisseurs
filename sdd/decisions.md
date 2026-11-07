@@ -32,3 +32,9 @@
    d'octobre-novembre 2026 portent `unitCode=""` ; le texte donne l'unité des 37 articles (seuls les 2 `FRAIS DE
    FACTURATION` en sont absents). Rejected: tout lire dans le texte (décision 2) ; déduire l'unité du libellé, qui
    ne dit pas si `SUCRE 25 KG` est vendu au kilo ou au sac.
+
+8. **L'arbitrage passe par Claude Haiku 5.5 avec le SDK `anthropic`, sa réponse limitée par un schéma JSON aux
+   candidats.** `gemini-3.8-flash` a échoué en 503 ou 504 sur tous les appels du 2026-11-07, sauf un. Sur les 65 lignes
+   réelles, Haiku 5.5 répond à tous les appels, en 1,5 s en moyenne, pour moins d'un centime au total, et aucune réponse
+   n'est coupée (332 jetons au plus). Rejected: garder Gemini ; passer par `langchain-anthropic`, une couche de plus pour
+   un seul appel ; Sonnet ou Opus, plus chers, sans besoin mesuré.
