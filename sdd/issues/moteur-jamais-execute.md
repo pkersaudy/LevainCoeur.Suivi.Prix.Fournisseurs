@@ -8,13 +8,6 @@ Où : `factures_a_traiter/`, non versionné.
 
 ## Tranché par le boulanger, à livrer
 
-- Plus aucune acceptation par embeddings : ils ne font que proposer des candidats au LLM ou au boulanger. Mesuré :
-  `JAUNE OEUF` -> `Blanc d'oeuf liquide`, `Panais` -> `Rhurbarbe` à 0,95, 6 des 8 premières lignes acceptées fausses,
-  parce que `Cat.1 France` pèse plus que le produit. À écrire en décision, elle remplace le palier 2 de la décision 3.
-- Un alias n'est retenu qu'après validation humaine : `run.py` apprend aujourd'hui les embeddings et le LLM, et l'erreur
-  se propage ensuite à 1,00. Voir [écriture sans validation](ecriture-sans-validation.md).
-- Un choix du LLM sous 0,80 de confiance part en revue. Mesuré : les 4 choix à 0,60 sur les 65 lignes sont tous douteux
-  ([candidats manquants](candidats-manquants.md)).
 - Boissons et consommables ignorés ([product.md](../product.md)). Reste à choisir comment : la base a déjà une catégorie
   `Emballage` avec du film alimentaire. Distralis facture aussi du matériel, 3 lignes de code `MAL002` sur 39 le
   31/10/2026 (`CANDISSOIRE`, `CERCLE MOUSSE`, `MAIN ALUMINIUM`).

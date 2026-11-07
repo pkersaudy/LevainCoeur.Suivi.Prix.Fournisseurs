@@ -2,10 +2,10 @@
 
     python run.py                 # traite le dossier factures_a_traiter/
     python run.py chemin.pdf ...  # traite des fichiers précis
-    python run.py --no-llm        # désactive le fallback LLM (alias + embeddings seulement)
+    python run.py --no-llm        # désactive le LLM (alias seulement, le reste part en revue)
 
 Flux par ligne : extraction -> normalisation EUR/kg -> matching cascade
--> écriture base (si matched) ou file de revue (si review).
+-> écriture base (si matched) et/ou file de revue (si llm ou review).
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from config import INBOX
-from pipeline.matcher import Matcher
+from config import CATEGORIE_A_RAPPROCHER, CATEGORIE_LLM, INBOX
+from pipeline.matcher import Matcher, Resultat
 from pipeline.normalize import vers_prix_kg
 from pipeline.router import router_facture
 from pipeline.writer import ajouter_a_base, ajouter_a_revue
@@ -23,7 +23,7 @@ from pipeline.writer import ajouter_a_base, ajouter_a_revue
 def traiter(pdfs: list[Path], utiliser_llm: bool = True):
     matcher = Matcher()
     a_base, a_revue = [], []
-    stats = {"alias": 0, "embeddings": 0, "llm": 0, "review": 0}
+    stats = {"alias": 0, "llm": 0, "review": 0}
 
     for pdf in pdfs:
         print(f"\n=== {pdf.name} ===")
@@ -52,22 +52,11 @@ def traiter(pdfs: list[Path], utiliser_llm: bool = True):
                         "Statut correspondance": res.methode,
                     }
                 )
-                # apprentissage : embeddings/llm deviennent un alias exact pour la prochaine fois
-                if res.methode in ("embeddings", "llm"):
-                    matcher.apprendre_alias(lg.designation, res.canonique, lg.fournisseur, res.methode)
+                if res.methode == "llm":
+                    a_revue.append(ligne_de_revue(lg, prix, unite, res))
                 print(f"    OK [{res.methode} {res.score:.2f}] {lg.designation!r} -> {res.canonique!r}")
             else:
-                a_revue.append(
-                    {
-                        "Fournisseur": lg.fournisseur,
-                        "Date": lg.date_prix,
-                        "Libelle facture": lg.designation,
-                        "Prix": prix,
-                        "Unite": unite,
-                        "Candidats": " | ".join(f"{c} ({s:.2f})" for c, s in res.candidats),
-                        "Matiere de base (a remplir)": "",
-                    }
-                )
+                a_revue.append(ligne_de_revue(lg, prix, unite, res))
                 print(f"    ? [revue] {lg.designation!r} -> candidats: {[c for c, _ in res.candidats]}")
 
     n1 = ajouter_a_base(a_base)
@@ -75,6 +64,22 @@ def traiter(pdfs: list[Path], utiliser_llm: bool = True):
     print(f"\n--- Bilan --- base +{n1} | a valider +{n2} | detail methodes: {stats}")
     if n2:
         print("    -> completez data/a_valider.csv puis lancez : python review.py")
+
+
+def ligne_de_revue(lg, prix: float, unite: str, res: Resultat) -> dict:
+    """Ligne de a_valider.csv : un choix du LLM à valider, ou une ligne à rapprocher."""
+    return {
+        "Categorie": CATEGORIE_LLM if res.methode == "llm" else CATEGORIE_A_RAPPROCHER,
+        "Fournisseur": lg.fournisseur,
+        "Date": lg.date_prix,
+        "Libelle facture": lg.designation,
+        "Prix": prix,
+        "Unite": unite,
+        "Candidats": " | ".join(f"{c} ({s:.2f})" for c, s in res.candidats),
+        "Choix LLM": res.canonique or "",
+        "Valide (oui)": "",
+        "Matiere de base (a remplir)": "",
+    }
 
 
 if __name__ == "__main__":

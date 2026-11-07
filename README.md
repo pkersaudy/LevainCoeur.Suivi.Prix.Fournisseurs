@@ -6,15 +6,16 @@ de prix longue, prête à alimenter votre tableur de marges (OnlyOffice).
 ## Logique de rapprochement (cascade)
 
 Pour chaque ligne de facture, le libellé fournisseur est rapproché d'une matière
-de base en 4 étages, du moins cher au plus cher :
+de base en 3 étages, du moins cher au plus cher :
 
 1. **Alias exact** — dictionnaire `data/dictionnaire_alias.csv`. Gratuit, déterministe, éditable à la main.
-2. **Embeddings** — similarité sémantique (cosinus) sur l'index. Accepté si score ≥ `SEUIL_AUTO`.
-3. **LLM** — n'arbitre que les cas ambigus, et **seulement** sur les 5 candidats les plus proches (RAG).
-4. **Revue humaine** — sinon, la ligne part dans `data/a_valider.csv`.
+2. **LLM** — choisit **seulement** parmi les 5 candidats les plus proches trouvés par les embeddings (RAG), retenu si
+   sa confiance est ≥ `SEUIL_CONFIANCE_LLM`. Les embeddings seuls ne valident rien.
+3. **Revue humaine** — sinon, la ligne part dans `data/a_valider.csv`.
 
-Tout rapprochement validé (étages 2, 3, 4) est **réinjecté comme alias** : le
-système apprend et sollicite de moins en moins les embeddings et le LLM.
+Un choix du LLM va en base **et** reste dans `data/a_valider.csv`, en catégorie `llm matched`. Seule la revue humaine
+**crée un alias** : une erreur de la machine ne devient jamais une vérité à 1,00, et un libellé validé est reconnu
+exactement la fois suivante.
 
 ### Revectorisation incrémentale
 L'index sémantique = noms canoniques **+** tous les alias connus. Les vecteurs
@@ -33,10 +34,11 @@ echo "ANTHROPIC_API_KEY=votre_cle" > .env      # pour le fallback LLM
 ```bash
 # 1. déposez vos PDF dans factures_a_traiter/  (ou passez les chemins en argument)
 python run.py
-python run.py --no-llm            # alias + embeddings seulement (zéro appel LLM)
+python run.py --no-llm            # alias seulement, le reste part en revue (zéro appel LLM)
 
 # 2. traitez les cas incertains
-#    remplissez la colonne "Matiere de base (a remplir)" de data/a_valider.csv
+#    dans data/a_valider.csv, remplissez "Matiere de base (a remplir)" ;
+#    pour une ligne "llm matched", écrivez oui dans "Valide (oui)", ou la bonne matière pour corriger
 python review.py
 ```
 
@@ -61,7 +63,7 @@ run.py                    point d'entrée (traite un dossier)
 review.py                 validation humaine + apprentissage d'alias
 pipeline/
   router.py               détection fournisseur -> extracteur
-  matcher.py              cascade alias -> embeddings -> LLM -> revue
+  matcher.py              cascade alias -> LLM sur candidats d'embeddings -> revue
   embeddings.py           index sémantique + cache incrémental
   llm.py                  fallback Claude Haiku (short-list RAG)
   normalize.py            prix -> €/kg

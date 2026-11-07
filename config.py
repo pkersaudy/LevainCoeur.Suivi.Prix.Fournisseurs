@@ -20,9 +20,12 @@ CSV_ENCODING = "utf-8-sig"
 # Modèle d'embeddings multilingue (bon en français, tourne en local, gratuit)
 EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 TOP_K = 5  # nb de candidats proposés au LLM
-SEUIL_AUTO = 0.82  # cosinus >= : on accepte sans LLM
-SEUIL_LLM = 0.55  # cosinus entre SEUIL_LLM et SEUIL_AUTO : on demande au LLM
-# cosinus < SEUIL_LLM : direct file de revue (probablement "new")
+SEUIL_LLM = 0.55  # cosinus >= : on demande au LLM ; en dessous, direct file de revue (probablement "new")
+SEUIL_CONFIANCE_LLM = 0.80  # confiance du LLM < : file de revue
+
+# --- File de revue ---
+CATEGORIE_LLM = "llm matched"  # déjà en base, le boulanger la valide ou la corrige
+CATEGORIE_A_RAPPROCHER = "a rapprocher"  # pas en base tant qu'il ne l'a pas remplie
 
 # --- LLM de secours ---
 LLM_MODEL = "claude-haiku-5-5"

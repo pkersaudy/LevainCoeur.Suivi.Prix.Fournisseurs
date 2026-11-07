@@ -1,12 +1,11 @@
 """Rapprochement en cascade d'un libellé fournisseur vers une matière de base :
 
     1. alias exact      (dictionnaire, gratuit, déterministe)   -> méthode "alias"
-    2. embeddings       (cosinus >= SEUIL_AUTO : on accepte)     -> méthode "embeddings"
-    3. LLM              (entre SEUIL_LLM et SEUIL_AUTO)          -> méthode "llm"
-    4. sinon            -> "review" (file a_valider.csv)
+    2. LLM              (candidats d'embeddings, confiance >= SEUIL_CONFIANCE_LLM) -> méthode "llm"
+    3. sinon            -> "review" (file a_valider.csv)
 
-Les rapprochements sûrs (1/2/3 acceptés) sont réinjectés comme nouveaux alias
-=> le système apprend et sollicite de moins en moins embeddings/LLM.
+Les embeddings ne valident rien : ils proposent des candidats au LLM ou au boulanger.
+Seule la revue humaine crée un alias, l'erreur d'une machine ne se propage pas à 1,00.
 """
 
 from __future__ import annotations
@@ -17,7 +16,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from config import ALIAS_CSV, BASE_CSV, CSV_DECIMAL, CSV_ENCODING, CSV_SEP, SEUIL_AUTO, SEUIL_LLM, TOP_K
+from config import ALIAS_CSV, BASE_CSV, CSV_DECIMAL, CSV_ENCODING, CSV_SEP, SEUIL_CONFIANCE_LLM, SEUIL_LLM, TOP_K
 
 from .embeddings import IndexSemantique
 
@@ -31,7 +30,7 @@ def norm(s: str) -> str:
 @dataclass
 class Resultat:
     canonique: str | None
-    methode: str  # alias | embeddings | llm | review
+    methode: str  # alias | llm | review
     score: float
     statut: str  # matched | new | review
     candidats: list
@@ -67,12 +66,8 @@ class Matcher:
         if c:
             return Resultat(c, "alias", 1.0, "matched", [])
 
-        # 2) embeddings
+        # 2) LLM sur la short-list d'embeddings
         cands = self.index.chercher(libelle, TOP_K)
-        if cands and cands[0][1] >= SEUIL_AUTO:
-            return Resultat(cands[0][0], "embeddings", cands[0][1], "matched", cands)
-
-        # 3) LLM sur la short-list
         if utiliser_llm and self.llm_disponible and cands and cands[0][1] >= SEUIL_LLM:
             from .llm import LlmIndisponible, arbitrer_llm
 
@@ -83,10 +78,10 @@ class Matcher:
                 print(f"  [!] LLM indisponible, le reste du lot part en revue : {e}")
                 self.llm_disponible = False
             else:
-                if choix:
+                if choix and conf >= SEUIL_CONFIANCE_LLM:
                     return Resultat(choix, "llm", conf, "matched", cands)
 
-        # 4) revue humaine
+        # 3) revue humaine
         return Resultat(None, "review", cands[0][1] if cands else 0.0, "review", cands)
 
     def apprendre_alias(self, libelle: str, canonique: str, fournisseur: str, methode: str):

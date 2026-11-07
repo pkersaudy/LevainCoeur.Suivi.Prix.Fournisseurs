@@ -6,11 +6,7 @@
 
 2. Superseded by 9.
 
-3. **Rapprochement en cascade : alias exact, puis embeddings, puis LLM sur les 5 candidats les plus proches, puis le
-   boulanger.** Les libellés fournisseurs sont trop loin des noms du fichier pour une distance de caractères :
-   « Herbe Cello Menthe 30g France » pour « Menthe fraiche », « FAR. BLE BIO MEULE BISE FR 25 KG » pour
-   « Blé Bio Meule Bise T80 ». Rejected: `thefuzz` seul (prototype, seuil 80) ; tout confier au LLM (coût, résultats
-   variables) ; un graphe LangGraph multi-agents (le flux est linéaire, 10 factures par mois ne le justifient pas).
+3. Superseded by 10.
 
 4. **Le dictionnaire d'alias est la vérité éditable, les vecteurs ne sont qu'un cache.** Chaque rapprochement validé
    devient un alias ; seuls les textes nouveaux sont vectorisés. Rejected: des « colonnes de synonymes vectorisées » à
@@ -42,3 +38,17 @@
    XML. Rejected: un extracteur sur le texte Distralis, inutile tant que le XML porte les lignes ; extraire toutes les
    factures avec un LLM sur le texte brut (prototype `multiagentapp.py` : coûteux, non déterministe, invente ou perd des
    lignes).
+
+10. **Rapprochement en cascade : alias exact, puis LLM sur les 5 candidats les plus proches trouvés par les embeddings,
+    puis le boulanger. Les embeddings ne valident rien, et un choix du LLM sous 0,80 de confiance part en revue. À 0,80
+    ou plus, il va en base et reste en revue, en catégorie `llm matched`. Seule la revue humaine crée un alias : `oui`
+    valide le choix, une autre matière corrige la ligne de base.** Les libellés fournisseurs sont trop loin des noms du fichier pour une distance de
+    caractères : « Herbe Cello Menthe 30g France » pour « Menthe fraiche », « FAR. BLE BIO MEULE BISE FR 25 KG » pour
+    « Blé Bio Meule Bise T80 ». Le 2026-11-07, sur les 65 premières lignes réelles, 6 des 8 premières lignes acceptées
+    par les embeddings étaient fausses (`JAUNE OEUF` -> `Blanc d'oeuf liquide`, `Panais` -> `Rhurbarbe` à 0,95) et les 4
+    choix du LLM à 0,60 étaient tous douteux ; un alias appris automatiquement rejouait ensuite l'erreur à 1,00.
+    Rejected: `thefuzz` seul (prototype, seuil 80) ; tout confier au LLM (coût, résultats variables) ; un graphe
+    LangGraph multi-agents (le flux est linéaire, 10 factures par mois ne le justifient pas) ; garder une acceptation
+    par embeddings à un seuil plus haut (`Cat.1 France` pèse plus que le produit, l'erreur se mesure à 0,95) ; ne jamais
+    faire d'un choix du LLM un alias (tout reste en LLM, aucun exact à terme) ; valider en recopiant le nom (plus de
+    saisie, la colonne `Valide (oui)` a été préférée par le boulanger).

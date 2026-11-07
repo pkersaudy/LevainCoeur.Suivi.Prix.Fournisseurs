@@ -9,9 +9,14 @@ Pourquoi : ces lignes partent en revue alors qu'elles se reconnaissent à la lec
 choisie à la place : `Salade Roquette` -> `Salade multi feuille`, `GRAINE DE TOURNESOL` -> `Melange Graine et
 Legumineuses`, `LAIT ENTIER BRICK 1 L` -> `Lait Entier cremerie de la rance`.
 
-Où : `TOP_K` et `SEUIL_LLM` dans `config.py`, `pipeline/embeddings.py`. À mesurer : une short-list plus longue, à
-presque rien par ligne avec Haiku 5.5 ; le contrat et la décision 3 limitent le LLM aux 5 plus proches.
+Vu le 2026-11-07 : `data/embeddings_cache.parquet` garde 22 vecteurs absents de la base et du dictionnaire, restes des
+alias appris automatiquement (`Carotte Lavée Sac Cal.35+ 10 kg Cat.1 France` -> `Rhurbarbe`, `Panais 5 kg Cat.1 France`
+-> `Rhurbarbe`, `Herbe Cello Aneth 30 g France` -> `Menthe fraiche`). `IndexSemantique.chercher` parcourt tout le cache :
+ces erreurs restent candidates à un score proche de 1, et faussent les mesures de cette issue. À corriger d'abord, puis
+à remesurer.
 
-Confiance : `matcher.py` accepte tout choix du LLM. Les 4 choix à 0,60 sont tous douteux, les 21 à 0,80 ou plus sont
-plausibles sauf le lait ci-dessus. Le seuil à 0,80 est tranché : voir [le moteur](moteur-jamais-execute.md). Résultats
-jugés à la lecture, à faire confirmer par le boulanger.
+Où : `TOP_K` et `SEUIL_LLM` dans `config.py`, `pipeline/embeddings.py`. À mesurer : une short-list plus longue, à
+presque rien par ligne avec Haiku 5.5 ; le contrat et la décision 10 limitent le LLM aux 5 plus proches.
+
+Confiance : les 21 choix à 0,80 ou plus sont plausibles sauf le lait ci-dessus. Résultats jugés à la lecture, à faire
+confirmer par le boulanger.

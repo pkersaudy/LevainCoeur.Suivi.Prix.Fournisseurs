@@ -17,10 +17,11 @@ flowchart LR
   PDF["Factures PDF"] --> EXT["extraction"]
   EXT --> NOR["normalisation"]
   NOR --> RAP["rapprochement"]
-  ALI[("dictionnaire d'alias")] <--> RAP
+  ALI[("dictionnaire d'alias")] --> RAP
   RAP -->|"rapprochée"| ECR["ecriture"]
-  RAP -->|"incertaine"| REV["file de revue"]
+  RAP -->|"incertaine ou LLM"| REV["file de revue"]
   REV -->|"review.py"| ECR
+  REV -->|"review.py"| ALI
   ECR --> BASE[("base longue CSV")]
 ```
 
