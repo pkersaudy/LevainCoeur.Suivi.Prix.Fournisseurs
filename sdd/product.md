@@ -45,7 +45,7 @@ Le boulanger, seul utilisateur, non développeur, sur son PC Linux. Il ouvre l'a
 | Fournisseur | Colonne du fichier | Facture |
 |---|---|---|
 | Transgourmet | `Trans` | Factur-X avec les lignes d'articles |
-| Distralis | `distralis` | PDF texte (son Factur-X ne porte pas les lignes) |
+| Distralis | `distralis` | Factur-X avec les lignes d'articles, au nom de `TEAM OUEST` |
 | Crèmerie de la Rance | `CREMERIE DE LA RANCE` | PDF texte |
 | Minoterie du Château | aucune pour l'instant | PDF texte |
 | Subéry Claude et Fils | aucune pour l'instant | PDF texte |

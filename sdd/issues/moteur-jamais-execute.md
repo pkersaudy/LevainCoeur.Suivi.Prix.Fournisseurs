@@ -16,12 +16,12 @@ Où : `factures_a_traiter/`, non versionné.
 - Un choix du LLM sous 0,80 de confiance part en revue. Mesuré : les 4 choix à 0,60 sur les 65 lignes sont tous douteux
   ([candidats manquants](candidats-manquants.md)).
 - Boissons et consommables ignorés ([product.md](../product.md)). Reste à choisir comment : la base a déjà une catégorie
-  `Emballage` avec du film alimentaire.
+  `Emballage` avec du film alimentaire. Distralis facture aussi du matériel, 3 lignes de code `MAL002` sur 39 le
+  31/10/2026 (`CANDISSOIRE`, `CERCLE MOUSSE`, `MAIN ALUMINIUM`).
 
 ## Reste à mesurer ou à bâtir
 
 - Rapprochement : mesuré avec Claude Haiku 5.5, voir [candidats manquants](candidats-manquants.md).
-- Le PDF non lu : [Distralis](extracteur-distralis.md).
 - Subéry : les poids de ligne ne servent pas, `Courge Potimarron 15 Pièces` reste à 1,04 la pièce pour 1,30 €/kg réel.
 - Normalisation : `SAUCISSE TOULOUSE VPF 125G X 8`, une barquette de 1 kg à 8,98 €, donne 71,85 €/kg
   ([issue](normalisation-incomplete.md)).

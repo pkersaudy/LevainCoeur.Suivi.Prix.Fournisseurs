@@ -50,7 +50,7 @@ ajoutez-le à la liste `EXTRACTEURS` dans `pipeline/extractors/__init__.py`.
 ## Attention
 Les extracteurs `pdfplumber` (Minoterie, Subéry, Crèmerie) sont calés sur les
 factures fournies : **vérifiez la sortie sur vos vrais PDF** et ajustez les regex.
-Transgourmet passe par le XML Factur-X, donc fiable sans réglage.
+Transgourmet et Distralis passent par le XML Factur-X, donc fiables sans réglage.
 Les prix sont normalisés en €/kg quand le conditionnement est lisible ; sinon la
 ligne reste à la pièce/barquette (colonne *Unité de mesure*).
 

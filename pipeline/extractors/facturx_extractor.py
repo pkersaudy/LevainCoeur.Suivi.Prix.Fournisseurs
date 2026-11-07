@@ -1,7 +1,7 @@
-"""Extracteur Factur-X : Transgourmet.
+"""Extracteurs Factur-X : Transgourmet et Distralis.
 
-Les factures Transgourmet (fichiers 'facturX_..._fx.pdf') sont des PDF hybrides
-Factur-X : une facture XML (norme CII / EN16931) est embarquée dans le PDF.
+Leurs factures sont des PDF hybrides Factur-X : une facture XML (norme CII /
+EN16931) est embarquée dans le PDF.
 On lit directement ce XML -> AUCUN OCR, aucune heuristique de mise en page.
 """
 
@@ -12,8 +12,8 @@ from pathlib import Path
 
 from lxml import etree
 
-from .base_extractor import Extractor, Facture, LigneFacture
-from .pdf_extractors import _lignes_texte
+from .base_extractor import Facture, LigneFacture
+from .pdf_extractors import _lignes_texte, _PdfBase
 
 # Namespaces CII (Cross Industry Invoice)
 NS = {
@@ -21,6 +21,9 @@ NS = {
     "ram": "urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100",
     "udt": "urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100",
 }
+
+# Unité facturée selon le unitCode du XML (recommandation UN/ECE 20 et 21).
+UNITE_PAR_UNIT_CODE = {"KGM": "kg", "LTR": "L", "C62": "pièce", "XBX": "boîte", "XPU": "barquette"}
 
 # Ligne d'article du PDF : le code en tête, l'unité facturée juste avant le prix (3 décimales) et le montant.
 RE_LIGNE_PDF = re.compile(r"^(?P<code>\d{6})\s.*\s(?P<unite>[A-Z]+)\s+\d+,\d{3}(?:\s+Pr)?\s+-?\d[\d ]*,\d{2}\s+\d{2}$")
@@ -31,15 +34,7 @@ def _txt(node, xpath):
     return r[0].text.strip() if r and r[0].text else None
 
 
-class FacturXExtractor(Extractor):
-    nom_fournisseur = "Transgourmet"
-
-    def peut_traiter(self, pdf_path: Path, texte_apercu: str) -> bool:
-        # Nom de fichier Factur-X ou présence du XML embarqué + émetteur Transgourmet
-        if "facturx" in pdf_path.name.lower() or "_fx" in pdf_path.name.lower():
-            return True
-        return "TRANSGOURMET" in texte_apercu.upper()
-
+class _FacturXBase(_PdfBase):
     def _lire_xml(self, pdf_path: Path) -> bytes:
         # Nécessite la lib 'facturx' : pip install factur-x
         from facturx import get_xml_from_pdf
@@ -57,7 +52,7 @@ class FacturXExtractor(Extractor):
         date_prix = f"{d[6:8]}/{d[4:6]}/{d[0:4]}" if d and len(d) == 8 else ""
 
         fac = Facture(fournisseur=self.nom_fournisseur, date_prix=date_prix, numero=numero)
-        # le XML porte unitCode="" sur toutes ses lignes : l'unité ne se lit que dans le texte du PDF
+        # Transgourmet porte unitCode="" sur toutes ses lignes : son unité ne se lit que dans le texte du PDF
         unites_par_code = _unites_par_code(pdf_path)
 
         for li in root.xpath(".//ram:IncludedSupplyChainTradeLineItem", namespaces=NS):
@@ -70,6 +65,9 @@ class FacturXExtractor(Extractor):
                 li, ".//ram:GrossPriceProductTradePrice/ram:ChargeAmount"
             )
             qte = _txt(li, ".//ram:SpecifiedLineTradeDelivery/ram:BilledQuantity")
+            unit_code = li.xpath(
+                "string(.//ram:SpecifiedLineTradeDelivery/ram:BilledQuantity/@unitCode)", namespaces=NS
+            )
             montant = _txt(li, ".//ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount")
 
             if not designation or pu is None:
@@ -78,7 +76,7 @@ class FacturXExtractor(Extractor):
                 LigneFacture(
                     designation=designation,
                     prix_unitaire_ht=float(pu),
-                    unite=unites_par_code.get(code, "unité"),
+                    unite=UNITE_PAR_UNIT_CODE.get(unit_code, unites_par_code.get(code, "unité")),
                     fournisseur=self.nom_fournisseur,
                     date_prix=date_prix,
                     code_article=code,
@@ -87,6 +85,16 @@ class FacturXExtractor(Extractor):
                 )
             )
         return fac
+
+
+class TransgourmetExtractor(_FacturXBase):
+    nom_fournisseur = "Transgourmet"
+    marqueur = "TRANSGOURMET"
+
+
+class DistralisExtractor(_FacturXBase):
+    nom_fournisseur = "Distralis"
+    marqueur = "TEAM OUEST"  # le nom porté par ses factures
 
 
 def _unites_par_code(pdf_path: Path) -> dict[str, str]:

@@ -5,7 +5,7 @@ governs: [pipeline/router.py, pipeline/extractors/, tests/test_extraction.py]
 
 Transformer le PDF d'un fournisseur en lignes d'articles brutes, sans les interpréter. La désignation reste celle de la
 facture, car elle devient la clé d'alias ; le prix et l'unité restent ceux facturés. Le choix entre XML et texte suit
-les décisions [2](../decisions.md) et [7](../decisions.md). Ajouter un fournisseur reste un petit travail : un
+les décisions [7](../decisions.md) et [9](../decisions.md). Ajouter un fournisseur reste un petit travail : un
 extracteur et son entrée dans la liste.
 
 Hors du module : convertir les unités, reconnaître la matière, les factures scannées, les avoirs et la TVA.
@@ -16,10 +16,13 @@ Hors du module : convertir les unités, reconnaître la matière, les factures s
   [test_minoterie_prend_la_date_de_facture_et_non_l_echeance](../../tests/test_extraction.py).
 - Une ligne Transgourmet porte l'unité facturée de son PDF, et `unité` si elle n'y figure pas :
   [test_transgourmet_prend_l_unite_dans_le_texte_du_pdf](../../tests/test_extraction.py).
+- Une facture Distralis, au nom de `TEAM OUEST`, est attribuée à Distralis avec l'unité de son XML, et un nom de fichier
+  Factur-X ne fait pas passer une facture pour du Transgourmet :
+  [test_distralis_reconnue_a_team_ouest_et_unite_lue_dans_le_xml](../../tests/test_extraction.py).
 - La facture de la Crèmerie, dont le nom n'est que dans le logo, est reconnue, et ses lignes répétées ne comptent qu'une
   fois : [test_cremerie_reconnue_a_son_adresse_mail_et_lignes_dedoublonnees](../../tests/test_extraction.py).
 - Un PDF qu'aucun extracteur ne reconnaît donne un message qui nomme le fichier, et les autres factures du lot passent ;
   à vérifier à la main.
 
-Écarts connus : [Distralis](../issues/extracteur-distralis.md),
+Écarts connus : [Distralis au profil minimum](../issues/distralis-profil-minimum.md),
 [lignes non reconnues perdues](../issues/lignes-non-reconnues.md).

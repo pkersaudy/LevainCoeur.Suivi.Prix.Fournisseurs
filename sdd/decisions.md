@@ -4,11 +4,7 @@
    une colonne de prix par fournisseur : l'application le compare et l'écrit. C'est le fichier que le boulanger relit.
    Rejected: la base longue CSV comme référence, illisible pour lui.
 
-2. **Transgourmet se lit dans le XML Factur-X embarqué, les autres dans le texte du PDF.** Les 3 factures Transgourmet de
-   juin 2026 portent un `factur-x.xml` au profil EN 16931 avec leurs lignes (2, 6 et 15) ; les 2 factures Distralis ont
-   un `factur-x.xml` au profil minimum, sans aucune ligne ; Minoterie, Subéry et Crèmerie n'en ont pas. Le choix suit
-   donc le profil lu, pas la seule présence du XML. Rejected: extraire toutes les factures avec un LLM sur le texte brut
-   (prototype `multiagentapp.py` : coûteux, non déterministe, invente ou perd des lignes).
+2. Superseded by 9.
 
 3. **Rapprochement en cascade : alias exact, puis embeddings, puis LLM sur les 5 candidats les plus proches, puis le
    boulanger.** Les libellés fournisseurs sont trop loin des noms du fichier pour une distance de caractères :
@@ -30,7 +26,7 @@
 
 7. **L'unité Transgourmet se lit dans le texte du PDF, le reste de la ligne dans le XML.** Les 39 lignes des 2 factures
    d'octobre-novembre 2026 portent `unitCode=""` ; le texte donne l'unité des 37 articles (seuls les 2 `FRAIS DE
-   FACTURATION` en sont absents). Rejected: tout lire dans le texte (décision 2) ; déduire l'unité du libellé, qui
+   FACTURATION` en sont absents). Rejected: tout lire dans le texte (décision 9) ; déduire l'unité du libellé, qui
    ne dit pas si `SUCRE 25 KG` est vendu au kilo ou au sac.
 
 8. **L'arbitrage passe par Claude Haiku 5.5 avec le SDK `anthropic`, sa réponse limitée par un schéma JSON aux
@@ -38,3 +34,11 @@
    réelles, Haiku 5.5 répond à tous les appels, en 1,5 s en moyenne, pour moins d'un centime au total, et aucune réponse
    n'est coupée (332 jetons au plus). Rejected: garder Gemini ; passer par `langchain-anthropic`, une couche de plus pour
    un seul appel ; Sonnet ou Opus, plus chers, sans besoin mesuré.
+
+9. **Transgourmet et Distralis se lisent dans le XML Factur-X embarqué, les autres dans le texte du PDF.** Le XML au
+   profil EN 16931 porte les lignes : 2, 6 et 15 chez Transgourmet en juin 2026, 25 et 14 en octobre-novembre, 39 sur la
+   facture Distralis du 31/10/2026, dont le `unitCode` donne l'unité, identique au PDF sur les 39. Distralis n'était
+   écarté que pour ses 2 factures de juin, au profil minimum, sans lignes ; Minoterie, Subéry et Crèmerie n'ont pas de
+   XML. Rejected: un extracteur sur le texte Distralis, inutile tant que le XML porte les lignes ; extraire toutes les
+   factures avec un LLM sur le texte brut (prototype `multiagentapp.py` : coûteux, non déterministe, invente ou perd des
+   lignes).
