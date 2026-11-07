@@ -2,9 +2,9 @@ from .base_extractor import Extractor, Facture, LigneFacture
 from .facturx_extractor import FacturXExtractor
 from .pdf_extractors import CremerieExtractor, MinoterieExtractor, SuberyExtractor
 
-# Ordre = priorite de detection. Ajoutez un nouveau fournisseur ici.
+# Ordre = priorité de détection. Ajoutez un nouveau fournisseur ici.
 EXTRACTEURS = [
-    FacturXExtractor(),  # Transgourmet (XML embarque)
+    FacturXExtractor(),  # Transgourmet (XML embarqué)
     MinoterieExtractor(),
     SuberyExtractor(),
     CremerieExtractor(),

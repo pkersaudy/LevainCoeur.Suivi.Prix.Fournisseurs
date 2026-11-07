@@ -1,11 +1,11 @@
-"""Point d'entree : traite tous les PDF d'un dossier et enrichit la base.
+"""Point d'entrée : traite tous les PDF d'un dossier et enrichit la base.
 
     python run.py                 # traite le dossier factures_a_traiter/
-    python run.py chemin.pdf ...  # traite des fichiers precis
-    python run.py --no-llm        # desactive le fallback LLM (alias + embeddings seulement)
+    python run.py chemin.pdf ...  # traite des fichiers précis
+    python run.py --no-llm        # désactive le fallback LLM (alias + embeddings seulement)
 
 Flux par ligne : extraction -> normalisation EUR/kg -> matching cascade
--> ecriture base (si matched) ou file de revue (si review).
+-> écriture base (si matched) ou file de revue (si review).
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """Extracteur Factur-X : Transgourmet.
 
 Les factures Transgourmet (fichiers 'facturX_..._fx.pdf') sont des PDF hybrides
-Factur-X : une facture XML (norme CII / EN16931) est embarquee dans le PDF.
+Factur-X : une facture XML (norme CII / EN16931) est embarquée dans le PDF.
 On lit directement ce XML -> AUCUN OCR, aucune heuristique de mise en page.
 """
 
@@ -30,13 +30,13 @@ class FacturXExtractor(Extractor):
     nom_fournisseur = "Transgourmet"
 
     def peut_traiter(self, pdf_path: Path, texte_apercu: str) -> bool:
-        # Nom de fichier Factur-X ou presence du XML embarque + emetteur Transgourmet
+        # Nom de fichier Factur-X ou présence du XML embarqué + émetteur Transgourmet
         if "facturx" in pdf_path.name.lower() or "_fx" in pdf_path.name.lower():
             return True
         return "TRANSGOURMET" in texte_apercu.upper()
 
     def _lire_xml(self, pdf_path: Path) -> bytes:
-        # Necessite la lib 'facturx' : pip install factur-x
+        # Nécessite la lib 'facturx' : pip install factur-x
         from facturx import get_facturx_xml_from_pdf
 
         _, xml_bytes = get_facturx_xml_from_pdf(str(pdf_path))
@@ -65,7 +65,7 @@ class FacturXExtractor(Extractor):
             unite = None
             q_node = li.xpath(".//ram:SpecifiedLineTradeDelivery/ram:BilledQuantity", namespaces=NS)
             if q_node:
-                unite = q_node[0].get("unitCode")  # ex: KGM, LTR, C62 (piece)
+                unite = q_node[0].get("unitCode")  # ex: KGM, LTR, C62 (pièce)
             montant = _txt(li, ".//ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount")
 
             if not designation or pu is None:
@@ -86,7 +86,7 @@ class FacturXExtractor(Extractor):
 
 
 def _map_unite(code: str | None) -> str:
-    """Codes UN/ECE -> unites lisibles."""
+    """Codes UN/ECE -> unités lisibles."""
     return {"KGM": "kg", "LTR": "L", "C62": "pièce", "H87": "pièce", "PCE": "pièce", "GRM": "g"}.get(
         (code or "").upper(), code or "unité"
     )

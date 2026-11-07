@@ -1,10 +1,10 @@
-"""Index semantique = noms canoniques + tous les alias connus.
+"""Index sémantique = noms canoniques + tous les alias connus.
 
-Point cle demande : la (re)vectorisation est INCREMENTALE.
+Point clé demandé : la (ré)vectorisation est INCRÉMENTALE.
 - On garde un cache disque {texte -> vecteur}.
-- A chaque lancement, on encode UNIQUEMENT les textes absents du cache
+- À chaque lancement, on encode UNIQUEMENT les textes absents du cache
   (typiquement les nouveaux alias que vous venez d'ajouter au dictionnaire),
-  puis on les ajoute a l'index. On ne re-encode jamais tout.
+  puis on les ajoute à l'index. On ne ré-encode jamais tout.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ class IndexSemantique:
             self.cache = pd.read_parquet(cache_path)
         else:
             self.cache = pd.DataFrame(columns=["texte", "canonique", "vecteur"])
-        self._matrix = None  # matrice numpy normalisee (construite a la volee)
+        self._matrix = None  # matrice numpy normalisée (construite à la volée)
 
     @property
     def model(self):
@@ -39,7 +39,7 @@ class IndexSemantique:
 
     def synchroniser(self, paires: list[tuple[str, str]]):
         """paires = [(texte, canonique)] : noms canoniques (texte==canonique)
-        ET alias (texte=alias fournisseur, canonique=matiere de base).
+        ET alias (texte=alias fournisseur, canonique=matière de base).
         N'encode que les textes pas encore en cache."""
         connus = set(self.cache["texte"])
         nouveaux = [(t, c) for (t, c) in dict(paires).items() if t not in connus]
@@ -64,11 +64,11 @@ class IndexSemantique:
         return self._matrix
 
     def chercher(self, requete: str, top_k: int = 5) -> list[tuple[str, float]]:
-        """Retourne [(canonique, score_cosinus)] tries, dedoublonnes par canonique."""
+        """Retourne [(canonique, score_cosinus)] triés, dédoublonnés par canonique."""
         if len(self.cache) == 0:
             return []
         q = self.model.encode([requete], normalize_embeddings=True)[0]
-        sims = self._M() @ q  # cosinus (vecteurs normalises)
+        sims = self._M() @ q  # cosinus (vecteurs normalisés)
         ordre = np.argsort(-sims)
         vus, res = set(), []
         for i in ordre:

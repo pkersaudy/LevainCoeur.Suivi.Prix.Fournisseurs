@@ -1,5 +1,5 @@
 """Normalisation des prix vers EUR/kg (ou EUR/L) quand le poids/volume du
-conditionnement est lisible dans le libelle. Sinon on garde tel quel."""
+conditionnement est lisible dans le libellé. Sinon on garde tel quel."""
 
 from __future__ import annotations
 
@@ -19,8 +19,8 @@ def _num(s: str) -> float:
 def vers_prix_kg(prix: float, unite: str, designation: str) -> tuple[float, str, bool]:
     """Retourne (prix_normalise, unite_finale, a_ete_converti).
 
-    - unite 'kg'/'L' : deja bon.
-    - unite piece/colis/barquette : on cherche un poids dans le libelle.
+    - unité 'kg'/'L' : déjà bon.
+    - unité pièce/colis/barquette : on cherche un poids dans le libellé.
     """
     u = (unite or "").lower()
     if u in ("kg", "l"):
@@ -39,5 +39,5 @@ def vers_prix_kg(prix: float, unite: str, designation: str) -> tuple[float, str,
     m = RE_CL.search(d)
     if m:
         return round(prix / (_num(m.group(1)) / 100), 4), "L", True
-    # sinon on ne sait pas convertir : on laisse le prix a la piece
+    # sinon on ne sait pas convertir : on laisse le prix à la pièce
     return prix, unite, False

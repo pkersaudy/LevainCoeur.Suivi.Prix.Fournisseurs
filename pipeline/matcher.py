@@ -1,12 +1,12 @@
-"""Rapprochement en cascade d'un libelle fournisseur vers une matiere de base :
+"""Rapprochement en cascade d'un libellé fournisseur vers une matière de base :
 
-    1. alias exact      (dictionnaire, gratuit, deterministe)   -> methode "alias"
-    2. embeddings       (cosinus >= SEUIL_AUTO : on accepte)     -> methode "embeddings"
-    3. LLM              (entre SEUIL_LLM et SEUIL_AUTO)          -> methode "llm"
+    1. alias exact      (dictionnaire, gratuit, déterministe)   -> méthode "alias"
+    2. embeddings       (cosinus >= SEUIL_AUTO : on accepte)     -> méthode "embeddings"
+    3. LLM              (entre SEUIL_LLM et SEUIL_AUTO)          -> méthode "llm"
     4. sinon            -> "review" (file a_valider.csv)
 
-Les rapprochements surs (1/2/3 acceptes) sont reinjectes comme nouveaux alias
-=> le systeme apprend et sollicite de moins en moins embeddings/LLM.
+Les rapprochements sûrs (1/2/3 acceptés) sont réinjectés comme nouveaux alias
+=> le système apprend et sollicite de moins en moins embeddings/LLM.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ class Resultat:
 
 class Matcher:
     def __init__(self):
-        # matieres de base (noms canoniques + categorie)
+        # matières de base (noms canoniques + catégorie)
         base = pd.read_csv(BASE_CSV, sep=CSV_SEP, decimal=CSV_DECIMAL, encoding=CSV_ENCODING)
         self.canoniques = sorted(base["Matière première"].dropna().unique().tolist())
         self.cat = dict(zip(base["Matière première"], base["Catégorie Matière première"]))
@@ -52,7 +52,7 @@ class Matcher:
         )
         self.alias_index = {norm(a): c for a, c in zip(self.alias["Alias fournisseur"], self.alias["Matière de base"])}
 
-        # index semantique = canoniques + alias (revectorisation incrementale)
+        # index sémantique = canoniques + alias (révectorisation incrémentale)
         self.index = IndexSemantique()
         paires = [(c, c) for c in self.canoniques]
         paires += [
@@ -83,7 +83,7 @@ class Matcher:
         return Resultat(None, "review", cands[0][1] if cands else 0.0, "review", cands)
 
     def apprendre_alias(self, libelle: str, canonique: str, fournisseur: str, methode: str):
-        """Ajoute un alias valide au dictionnaire + a l'index (incremental)."""
+        """Ajoute un alias validé au dictionnaire + à l'index (incrémental)."""
         if norm(libelle) in self.alias_index:
             return
         self.alias_index[norm(libelle)] = canonique

@@ -1,10 +1,10 @@
 """Extracteurs pour les factures PDF "classiques" (non Factur-X) :
-Minoterie du Chateau, Subery Claude et Fils, Cremerie de la Rance.
+Minoterie du Château, Subery Claude et Fils, Crèmerie de la Rance.
 
-NOTE : l'extraction PDF est intrinsequement sensible a la mise en page.
-Les regex ci-dessous sont calees sur les factures fournies ; controlez la
+NOTE : l'extraction PDF est intrinsèquement sensible à la mise en page.
+Les regex ci-dessous sont calées sur les factures fournies ; contrôlez la
 sortie sur vos vrais PDF et ajustez si besoin. Toute ligne non reconnue est
-renvoyee dans la file "a_valider.csv" plutot que perdue.
+renvoyée dans la file "a_valider.csv" plutôt que perdue.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ import pdfplumber
 
 from .base_extractor import Extractor, Facture, LigneFacture
 
-NUM = r"-?\d[\d\s]*,\d+|-?\d+"  # nombre FR (virgule decimale)
+NUM = r"-?\d[\d\s]*,\d+|-?\d+"  # nombre FR (virgule décimale)
 
 
 def _f(s: str) -> float:
@@ -33,7 +33,7 @@ def _lignes_texte(pdf_path: Path) -> list[str]:
 
 
 class _PdfBase(Extractor):
-    marqueur = ""  # chaine caracterisant l'emetteur
+    marqueur = ""  # chaîne caractérisant l'émetteur
 
     def peut_traiter(self, pdf_path: Path, texte_apercu: str) -> bool:
         return self.marqueur.upper() in texte_apercu.upper()
@@ -42,7 +42,7 @@ class _PdfBase(Extractor):
 class MinoterieExtractor(_PdfBase):
     nom_fournisseur = "Minoterie du Chateau"
     marqueur = "Minoteries du Ch"
-    # Code Designation Qte Poids PU_Brut [Remises] PU_Net Montant TVA
+    # Code Désignation Qté Poids PU_Brut [Remises] PU_Net Montant TVA
     RE_LIGNE = re.compile(
         rf"^(?P<code>[A-Z0-9]{{5,10}})\s+(?P<des>.+?)\s+\d+\s+(?P<tail>(?:{NUM})(?:\s+(?:{NUM}))*)\s+(?P<tva>[13])$"
     )
@@ -85,7 +85,7 @@ class MinoterieExtractor(_PdfBase):
 class SuberyExtractor(_PdfBase):
     nom_fournisseur = "Subéry Claude et Fils"
     marqueur = "Subéry"
-    # TVA COLIS DESIGNATION POIDS PIECES PU_Brut % PU_Net(suffixe K/P) HT
+    # TVA COLIS DÉSIGNATION POIDS PIÈCES PU_Brut % PU_Net(suffixe K/P) HT
     RE_LIGNE = re.compile(
         rf"^\s*\d+\s+{NUM}\s+(?P<des>.+?)\s+(?P<poids>{NUM})\s+\d+\s+(?P<pubrut>{NUM})\s+"
         rf"(?P<punet>{NUM})(?P<suf>[KP])\s+(?P<ht>{NUM})\s*$"
@@ -101,7 +101,7 @@ class SuberyExtractor(_PdfBase):
             if not m:
                 continue
             pu = _f(m.group("punet"))
-            # suffixe K = deja au kg ; P = a la piece/barquette (a normaliser plus tard)
+            # suffixe K = déjà au kg ; P = à la pièce/barquette (à normaliser plus tard)
             unite = "kg" if m.group("suf") == "K" else "pièce"
             fac.lignes.append(
                 LigneFacture(
@@ -118,8 +118,8 @@ class SuberyExtractor(_PdfBase):
 
 class CremerieExtractor(_PdfBase):
     nom_fournisseur = "Crèmerie de la Rance"
-    marqueur = "Cr" + "\u00e8" + "merie"  # "Crèmerie" (robuste a l'accent)
-    # Code Description Unite(Litre/Kg) Qte PU_HT Montant TVA
+    marqueur = "Cr" + "\u00e8" + "merie"  # "Crèmerie" (robuste à l'accent)
+    # Code Description Unité(Litre/Kg) Qté PU_HT Montant TVA
     RE_LIGNE = re.compile(
         rf"^(?P<code>[A-Z]\d+)\s+(?P<des>.+?)\s+(?P<unite>Litre|Kg|Pièce|Piece)\s+"
         rf"(?P<qte>{NUM})\s+(?P<pu>{NUM})\s+(?P<montant>{NUM})\s+{NUM}\s*$"
@@ -136,7 +136,7 @@ class CremerieExtractor(_PdfBase):
             if not m:
                 continue
             des = m.group("des").strip()
-            if des in vus:  # la facture repete les memes lignes -> on dedoublonne
+            if des in vus:  # la facture répète les mêmes lignes -> on dédoublonne
                 continue
             vus.add(des)
             unite = {"Litre": "L", "Kg": "kg"}.get(m.group("unite"), m.group("unite").lower())

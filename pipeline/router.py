@@ -1,4 +1,4 @@
-"""Detecte le fournisseur d'un PDF et delegue au bon extracteur."""
+"""Détecte le fournisseur d'un PDF et délègue au bon extracteur."""
 
 from __future__ import annotations
 

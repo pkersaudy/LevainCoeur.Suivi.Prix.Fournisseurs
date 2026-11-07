@@ -1,4 +1,4 @@
-"""Modele de donnee commun + interface d'extraction par fournisseur."""
+"""Modèle de donnée commun + interface d'extraction par fournisseur."""
 
 from __future__ import annotations
 
@@ -11,9 +11,9 @@ from pathlib import Path
 class LigneFacture:
     """Une ligne d'article extraite d'une facture, avant rapprochement."""
 
-    designation: str  # libelle brut du fournisseur (= futur alias)
-    prix_unitaire_ht: float  # prix unitaire HT tel que facture
-    unite: str = "kg"  # unite facturee (kg, L, piece, colis...)
+    designation: str  # libellé brut du fournisseur (= futur alias)
+    prix_unitaire_ht: float  # prix unitaire HT tel que facturé
+    unite: str = "kg"  # unité facturée (kg, L, pièce, colis...)
     fournisseur: str = ""
     date_prix: str = ""  # jj/mm/aaaa
     code_article: str | None = None  # code fournisseur si dispo
@@ -40,4 +40,4 @@ class Extractor(ABC):
 
     @abstractmethod
     def extraire(self, pdf_path: Path) -> Facture:
-        """Extrait les lignes d'articles (matieres premieres uniquement)."""
+        """Extrait les lignes d'articles (matières premières uniquement)."""

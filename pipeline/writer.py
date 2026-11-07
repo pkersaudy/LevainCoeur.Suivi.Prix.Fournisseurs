@@ -1,4 +1,4 @@
-"""Ecriture des resultats : append dans la base longue (historique de prix)
+"""Écriture des résultats : append dans la base longue (historique de prix)
 et alimentation de la file de revue pour les cas 'review'."""
 
 from __future__ import annotations

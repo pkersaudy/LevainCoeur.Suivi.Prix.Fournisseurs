@@ -2,8 +2,8 @@
 
 Ouvrez data/a_valider.csv, remplissez la colonne 'Matiere de base (a remplir)' :
   - avec un nom canonique existant  -> la ligne rejoint la base ET devient un alias appris
-  - avec un NOUVEAU nom             -> nouvelle matiere creee dans la base
-  - laissez vide                    -> ignore (hors perimetre)
+  - avec un NOUVEAU nom             -> nouvelle matière créée dans la base
+  - laissez vide                    -> ignorée (hors périmètre)
 Puis lancez : python review.py
 """
 
@@ -45,11 +45,11 @@ def main():
                 "Statut correspondance": statut,
             }
         )
-        # apprentissage : le libelle devient un alias pour la prochaine fois
+        # apprentissage : le libellé devient un alias pour la prochaine fois
         matcher.apprendre_alias(r["Libelle facture"], canon, r["Fournisseur"], "revue")
 
     n = ajouter_a_base(lignes)
-    # on retire les lignes traitees de la file
+    # on retire les lignes traitées de la file
     reste = df[df[col].astype(str).str.strip() == ""]
     reste.to_csv(REVIEW_CSV, sep=CSV_SEP, encoding=CSV_ENCODING, index=False)
     print(f"{n} ligne(s) integree(s) a la base et apprise(s) comme alias. {len(reste)} restante(s) a valider.")
