@@ -1,5 +1,5 @@
 ---
-governs: [pipeline/matcher.py, pipeline/embeddings.py, pipeline/llm.py]
+governs: [pipeline/matcher.py, pipeline/embeddings.py, pipeline/llm.py, tests/test_llm.py]
 ---
 # rapprochement
 
@@ -13,7 +13,9 @@ Hors du module : extraire le libellé, convertir le prix, écrire quoi que ce so
 - Le LLM ne reçoit que le libellé et les candidats les plus proches, et une réponse hors de ces candidats est ignorée ;
   à vérifier à la main.
 - Sous le seuil bas, ou le LLM coupé par `--no-llm`, la ligne incertaine part en revue ; à vérifier à la main.
+- Une panne du LLM n'arrête pas le lot, et ses lignes restantes partent en revue sans nouvel appel :
+  [test_service_indisponible_envoie_le_lot_en_revue_sans_rappeler](../../tests/test_llm.py).
 - Sel de Guérande, sel fin et gros sel restent trois matières ; à vérifier à la main.
 
 Écarts connus : [alias sans fournisseur](../issues/alias-sans-fournisseur.md),
-[clé LLM jamais lue](../issues/cle-llm-jamais-lue.md).
+[clé LLM absente en cours de lot](../issues/cle-llm-jamais-lue.md).

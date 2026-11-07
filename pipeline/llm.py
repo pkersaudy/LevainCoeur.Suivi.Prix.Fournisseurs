@@ -8,7 +8,15 @@ import json
 import os
 import re
 
-from config import LLM_API_KEY_ENV, LLM_MODEL
+from dotenv import load_dotenv
+
+from config import LLM_API_KEY_ENV, LLM_MAX_RETRIES, LLM_MODEL, LLM_TIMEOUT_S, ROOT
+
+load_dotenv(ROOT / ".env")
+
+
+class LlmIndisponible(Exception):
+    """Le service LLM ne répond pas : la décision revient au boulanger."""
 
 
 def _api_key() -> str | None:
@@ -33,16 +41,19 @@ def arbitrer_llm(libelle: str, candidats: list[str], categorie: str = "") -> tup
     if not key:
         raise RuntimeError(f"Cle API absente. Definissez une des variables {LLM_API_KEY_ENV} dans .env")
 
-    from langchain_core.prompts import ChatPromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
+    from langchain_google_genai.chat_models import GoogleAPIError
 
-    llm = ChatGoogleGenerativeAI(model=LLM_MODEL, google_api_key=key)
-    prompt = ChatPromptTemplate.from_messages([("system", SYSTEME), ("human", "{input}")])
+    llm = ChatGoogleGenerativeAI(
+        model=LLM_MODEL, google_api_key=key, timeout=LLM_TIMEOUT_S, max_retries=LLM_MAX_RETRIES
+    )
     entree = f"Libelle facture : {libelle}\nCategorie probable : {categorie}\nCandidats : {candidats}"
-    resp = (prompt | llm).invoke({"input": entree})
-    texte = getattr(resp, "content", None) or getattr(resp, "text", "")  # selon version LangChain
+    try:
+        resp = llm.invoke([("system", SYSTEME), ("human", entree)])
+    except GoogleAPIError as e:
+        raise LlmIndisponible(str(e)) from e
 
-    m = re.search(r"\{.*\}", texte, re.DOTALL)
+    m = re.search(r"\{.*\}", resp.text, re.DOTALL)
     if not m:
         return None, 0.0
     try:

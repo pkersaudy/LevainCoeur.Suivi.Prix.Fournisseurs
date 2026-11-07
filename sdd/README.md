@@ -26,8 +26,8 @@ flowchart LR
 
 Ce qui est difficile ici : les libellés fournisseurs ressemblent peu aux noms du fichier, les factures parlent en colis
 quand le fichier parle en €/kg, et chaque PDF texte a sa mise en page. Une erreur ne se voit pas tout de suite : elle
-fausse les marges plus tard. Le moteur n'a encore jamais tourné de bout en bout
-([issue](issues/moteur-jamais-execute.md)), et il n'a aucun test : les critères des contrats se vérifient à la main.
+fausse les marges plus tard. Le moteur tourne de bout en bout mais ses résultats ne sont pas encore fiables
+([issue](issues/moteur-jamais-execute.md)), et la plupart des critères des contrats se vérifient à la main.
 
 ## Modules
 

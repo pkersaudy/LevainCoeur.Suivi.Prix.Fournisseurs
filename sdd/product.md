@@ -64,6 +64,8 @@ Ajouter un fournisseur ensuite doit rester un petit travail.
 - La mise à jour directe du tableur de marges `Carte_Produits_et_marges.xlsx` : étape suivante.
 - Les factures scannées ou photographiées : seulement les PDF texte et Factur-X.
 - Les avoirs, remises, TVA et la comptabilité.
+- Les boissons et les consommables (Coca, film alimentaire, frais de facturation) : ignorés pour l'instant, la façon de
+  les intégrer à l'application reste à arbitrer.
 - Plusieurs utilisateurs, le cloud, le mobile.
 
 ## Questions ouvertes

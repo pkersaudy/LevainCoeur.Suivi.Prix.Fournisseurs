@@ -1,9 +1,8 @@
-# La clé du LLM n'est jamais lue dans .env
+# Une clé LLM absente arrête le lot en cours de route
 
-Quoi : `python-dotenv` est dans `requirements.txt`, mais aucun fichier n'appelle `load_dotenv`. La clé de `.env`
-n'arrive donc pas à `pipeline/llm.py:32`, qui lève `RuntimeError` au premier cas ambigu.
+Quoi : `pipeline/llm.py` lit `.env`, mais sans clé il lève `RuntimeError` au premier cas ambigu, pas au démarrage.
 
-Pourquoi : cette exception n'est pas rattrapée, et arrête le lot avant `run.py:66` : aucune ligne n'est écrite en base,
-alors que `run.py:54` a déjà enregistré des alias. Seul `--no-llm` l'évite.
+Pourquoi : la règle Errors de `coding-style.md` veut l'échec tout de suite ; ici, le lot en cours est perdu, alors que
+`run.py` a déjà enregistré des alias. Seul `--no-llm` l'évite.
 
-Où : `config.py` ou le point d'entrée, `pipeline/llm.py:32`.
+Où : `run.py`, qui sait seul si le LLM servira : à faire dans le lot qui retire l'apprentissage de `run.py`.

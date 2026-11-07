@@ -7,11 +7,13 @@ On lit directement ce XML -> AUCUN OCR, aucune heuristique de mise en page.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 from lxml import etree
 
 from .base_extractor import Extractor, Facture, LigneFacture
+from .pdf_extractors import _lignes_texte
 
 # Namespaces CII (Cross Industry Invoice)
 NS = {
@@ -19,6 +21,9 @@ NS = {
     "ram": "urn:un:unece:uncefact:data:standard:ReusableAggregateBusinessInformationEntity:100",
     "udt": "urn:un:unece:uncefact:data:standard:UnqualifiedDataType:100",
 }
+
+# Ligne d'article du PDF : le code en tête, l'unité facturée juste avant le prix (3 décimales) et le montant.
+RE_LIGNE_PDF = re.compile(r"^(?P<code>\d{6})\s.*\s(?P<unite>[A-Z]+)\s+\d+,\d{3}(?:\s+Pr)?\s+-?\d[\d ]*,\d{2}\s+\d{2}$")
 
 
 def _txt(node, xpath):
@@ -37,9 +42,10 @@ class FacturXExtractor(Extractor):
 
     def _lire_xml(self, pdf_path: Path) -> bytes:
         # Nécessite la lib 'facturx' : pip install factur-x
-        from facturx import get_facturx_xml_from_pdf
+        from facturx import get_xml_from_pdf
 
-        _, xml_bytes = get_facturx_xml_from_pdf(str(pdf_path))
+        # avec check_xsd, la version 7.9 renvoie un booléen à la place du XML
+        _, xml_bytes = get_xml_from_pdf(pdf_path.read_bytes(), check_xsd=False)
         return xml_bytes
 
     def extraire(self, pdf_path: Path) -> Facture:
@@ -51,6 +57,8 @@ class FacturXExtractor(Extractor):
         date_prix = f"{d[6:8]}/{d[4:6]}/{d[0:4]}" if d and len(d) == 8 else ""
 
         fac = Facture(fournisseur=self.nom_fournisseur, date_prix=date_prix, numero=numero)
+        # le XML porte unitCode="" sur toutes ses lignes : l'unité ne se lit que dans le texte du PDF
+        unites_par_code = _unites_par_code(pdf_path)
 
         for li in root.xpath(".//ram:IncludedSupplyChainTradeLineItem", namespaces=NS):
             designation = _txt(li, ".//ram:SpecifiedTradeProduct/ram:Name")
@@ -62,10 +70,6 @@ class FacturXExtractor(Extractor):
                 li, ".//ram:GrossPriceProductTradePrice/ram:ChargeAmount"
             )
             qte = _txt(li, ".//ram:SpecifiedLineTradeDelivery/ram:BilledQuantity")
-            unite = None
-            q_node = li.xpath(".//ram:SpecifiedLineTradeDelivery/ram:BilledQuantity", namespaces=NS)
-            if q_node:
-                unite = q_node[0].get("unitCode")  # ex: KGM, LTR, C62 (pièce)
             montant = _txt(li, ".//ram:SpecifiedTradeSettlementLineMonetarySummation/ram:LineTotalAmount")
 
             if not designation or pu is None:
@@ -74,7 +78,7 @@ class FacturXExtractor(Extractor):
                 LigneFacture(
                     designation=designation,
                     prix_unitaire_ht=float(pu),
-                    unite=_map_unite(unite),
+                    unite=unites_par_code.get(code, "unité"),
                     fournisseur=self.nom_fournisseur,
                     date_prix=date_prix,
                     code_article=code,
@@ -85,8 +89,11 @@ class FacturXExtractor(Extractor):
         return fac
 
 
-def _map_unite(code: str | None) -> str:
-    """Codes UN/ECE -> unités lisibles."""
-    return {"KGM": "kg", "LTR": "L", "C62": "pièce", "H87": "pièce", "PCE": "pièce", "GRM": "g"}.get(
-        (code or "").upper(), code or "unité"
-    )
+def _unites_par_code(pdf_path: Path) -> dict[str, str]:
+    """Lit l'unité facturée de chaque article dans le texte du PDF, indexée par code article."""
+    unites_par_code = {}
+    for ligne in _lignes_texte(pdf_path):
+        m = RE_LIGNE_PDF.match(ligne)
+        if m:
+            unites_par_code[m.group("code")] = {"KG": "kg", "L": "L"}.get(m.group("unite"), m.group("unite"))
+    return unites_par_code

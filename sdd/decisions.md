@@ -27,3 +27,8 @@
 6. **Les prix se comparent dans l'unité de la ligne du fichier.** La proposition Transgourmet donne des prix au
    conditionnement (amandes effilées 42,25 € le colis de 5 kg, soit 8,45 €/kg) ; les œufs durs se ramènent au kilo avec
    48 g par œuf, convention choisie par le boulanger. Rejected: reprendre le prix facturé tel quel.
+
+7. **L'unité Transgourmet se lit dans le texte du PDF, le reste de la ligne dans le XML.** Les 39 lignes des 2 factures
+   d'octobre-novembre 2026 portent `unitCode=""` ; le texte donne l'unité des 37 articles (seuls les 2 `FRAIS DE
+   FACTURATION` en sont absents). Rejected: tout lire dans le texte (décision 2) ; déduire l'unité du libellé, qui
+   ne dit pas si `SUCRE 25 KG` est vendu au kilo ou au sac.

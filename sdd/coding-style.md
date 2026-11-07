@@ -64,7 +64,7 @@ and tests on the same subject share a file or a group. No micro test for each mi
 
 | Check | Command |
 |---|---|
-| Tests | `pytest -q --tb=short`, à partir du premier test : il n'y en a aucun aujourd'hui |
+| Tests | `pytest -q --tb=short`, après `pip install -r requirements-dev.txt` |
 | Linters | `ruff check . && ruff format --check .`, après `pip install -r requirements-dev.txt` |
 | Moteur sans LLM | `python run.py --no-llm` |
 | SDD audit | `bash sdd/bin/sdd audit` |

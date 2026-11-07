@@ -10,13 +10,14 @@ renvoyée dans la file "a_valider.csv" plutôt que perdue.
 from __future__ import annotations
 
 import re
+from itertools import pairwise
 from pathlib import Path
 
 import pdfplumber
 
 from .base_extractor import Extractor, Facture, LigneFacture
 
-NUM = r"-?\d[\d\s]*,\d+|-?\d+"  # nombre FR (virgule décimale)
+NUM = r"(?:-?\d[\d\s]*,\d+|-?\d+)"  # nombre FR (virgule décimale)
 
 
 def _f(s: str) -> float:
@@ -50,13 +51,8 @@ class MinoterieExtractor(_PdfBase):
 
     def extraire(self, pdf_path: Path) -> Facture:
         lignes = _lignes_texte(pdf_path)
-        date = ""
-        for l in lignes:
-            if "N° Pièce" in l or "Date" in l:
-                m = self.RE_DATE.search(l)
-                if m:
-                    date = m.group(1)
-                    break
+        # la date est sous l'en-tête : la première venue serait celle de l'échéance
+        date = next((self.RE_DATE.search(suiv).group(1) for prec, suiv in pairwise(lignes) if "N° Pièce" in prec), "")
         fac = Facture(self.nom_fournisseur, date)
         for l in lignes:
             m = self.RE_LIGNE.match(l.strip())
@@ -94,9 +90,13 @@ class SuberyExtractor(_PdfBase):
 
     def extraire(self, pdf_path: Path) -> Facture:
         lignes = _lignes_texte(pdf_path)
-        date = next((self.RE_DATE.search(l).group(1) for l in lignes if self.RE_DATE.search(l)), "")
-        fac = Facture(self.nom_fournisseur, date)
-        for l in lignes:
+        fac = Facture(self.nom_fournisseur, "")
+        date = ""
+        for prec, l in pairwise(lignes):
+            # un même PDF peut réunir plusieurs factures : la date change à chaque en-tête
+            if prec.startswith("DATE FACTURE"):
+                date = self.RE_DATE.search(l).group(1)
+                fac.date_prix = fac.date_prix or date
             m = self.RE_LIGNE.match(l)
             if not m:
                 continue

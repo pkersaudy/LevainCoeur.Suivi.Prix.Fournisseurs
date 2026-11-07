@@ -59,6 +59,7 @@ class Matcher:
             (a, c) for a, c in zip(self.alias["Alias fournisseur"], self.alias["Matière de base"]) if isinstance(a, str)
         ]
         self.index.synchroniser(paires)
+        self.llm_disponible = True
 
     def matcher(self, libelle: str, categorie: str = "", utiliser_llm: bool = True) -> Resultat:
         # 1) alias exact
@@ -72,12 +73,18 @@ class Matcher:
             return Resultat(cands[0][0], "embeddings", cands[0][1], "matched", cands)
 
         # 3) LLM sur la short-list
-        if utiliser_llm and cands and cands[0][1] >= SEUIL_LLM:
-            from .llm import arbitrer_llm
+        if utiliser_llm and self.llm_disponible and cands and cands[0][1] >= SEUIL_LLM:
+            from .llm import LlmIndisponible, arbitrer_llm
 
-            choix, conf = arbitrer_llm(libelle, [c for c, _ in cands], categorie)
-            if choix:
-                return Resultat(choix, "llm", conf, "matched", cands)
+            try:
+                choix, conf = arbitrer_llm(libelle, [c for c, _ in cands], categorie)
+            except LlmIndisponible as e:
+                # on ne repaie pas le délai à chaque ligne : le reste du lot part en revue
+                print(f"  [!] LLM indisponible, le reste du lot part en revue : {e}")
+                self.llm_disponible = False
+            else:
+                if choix:
+                    return Resultat(choix, "llm", conf, "matched", cands)
 
         # 4) revue humaine
         return Resultat(None, "review", cands[0][1] if cands else 0.0, "review", cands)
