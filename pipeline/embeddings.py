@@ -6,8 +6,11 @@ Point cle demande : la (re)vectorisation est INCREMENTALE.
   (typiquement les nouveaux alias que vous venez d'ajouter au dictionnaire),
   puis on les ajoute a l'index. On ne re-encode jamais tout.
 """
+
 from __future__ import annotations
+
 from pathlib import Path
+
 import numpy as np
 import pandas as pd
 
@@ -29,7 +32,8 @@ class IndexSemantique:
     @property
     def model(self):
         if self._model is None:
-            from sentence_transformers import SentenceTransformer   # import paresseux
+            from sentence_transformers import SentenceTransformer  # import paresseux
+
             self._model = SentenceTransformer(self.model_name)
         return self._model
 
@@ -38,20 +42,20 @@ class IndexSemantique:
         ET alias (texte=alias fournisseur, canonique=matiere de base).
         N'encode que les textes pas encore en cache."""
         connus = set(self.cache["texte"])
-        nouveaux = [(t, c) for (t, c) in dict((t, c) for t, c in paires).items()
-                    if t not in connus]
+        nouveaux = [(t, c) for (t, c) in dict(paires).items() if t not in connus]
         if nouveaux:
             textes = [t for t, _ in nouveaux]
             vecs = self.model.encode(textes, normalize_embeddings=True)
-            ajout = pd.DataFrame({
-                "texte": textes,
-                "canonique": [c for _, c in nouveaux],
-                "vecteur": [v.astype("float32").tolist() for v in vecs],
-            })
+            ajout = pd.DataFrame(
+                {
+                    "texte": textes,
+                    "canonique": [c for _, c in nouveaux],
+                    "vecteur": [v.astype("float32").tolist() for v in vecs],
+                }
+            )
             self.cache = pd.concat([self.cache, ajout], ignore_index=True)
             self.cache.to_parquet(self.cache_path, index=False)
-            print(f"  [embeddings] {len(nouveaux)} nouveau(x) vecteur(s) encode(s) "
-                  f"(cache: {len(self.cache)} au total)")
+            print(f"  [embeddings] {len(nouveaux)} nouveau(x) vecteur(s) encode(s) (cache: {len(self.cache)} au total)")
         self._matrix = None  # invalide le cache matriciel
 
     def _M(self) -> np.ndarray:
@@ -64,7 +68,7 @@ class IndexSemantique:
         if len(self.cache) == 0:
             return []
         q = self.model.encode([requete], normalize_embeddings=True)[0]
-        sims = self._M() @ q                      # cosinus (vecteurs normalises)
+        sims = self._M() @ q  # cosinus (vecteurs normalises)
         ordre = np.argsort(-sims)
         vus, res = set(), []
         for i in ordre:

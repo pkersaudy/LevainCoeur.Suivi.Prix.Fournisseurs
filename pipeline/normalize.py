@@ -1,13 +1,15 @@
 """Normalisation des prix vers EUR/kg (ou EUR/L) quand le poids/volume du
 conditionnement est lisible dans le libelle. Sinon on garde tel quel."""
+
 from __future__ import annotations
+
 import re
 
-RE_KG = re.compile(r"(\d+[.,]?\d*)\s*KG", re.I)
-RE_G = re.compile(r"(\d+[.,]?\d*)\s*G\b", re.I)
-RE_L = re.compile(r"(\d+[.,]?\d*)\s*L\b", re.I)
-RE_CL = re.compile(r"(\d+[.,]?\d*)\s*CL", re.I)
-RE_X = re.compile(r"X\s*(\d+)", re.I)     # ex: X18, X75
+RE_KG = re.compile(r"(\d+[.,]?\d*)\s*KG", re.IGNORECASE)
+RE_G = re.compile(r"(\d+[.,]?\d*)\s*G\b", re.IGNORECASE)
+RE_L = re.compile(r"(\d+[.,]?\d*)\s*L\b", re.IGNORECASE)
+RE_CL = re.compile(r"(\d+[.,]?\d*)\s*CL", re.IGNORECASE)
+RE_X = re.compile(r"X\s*(\d+)", re.IGNORECASE)  # ex: X18, X75
 
 
 def _num(s: str) -> float:

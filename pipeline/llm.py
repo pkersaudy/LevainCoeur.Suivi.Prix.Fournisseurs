@@ -1,12 +1,14 @@
 """LLM de secours : arbitre uniquement les cas ambigus, avec la short-list
 d'embeddings comme candidats (RAG). Ne voit jamais les 130 matieres, seulement
 les TOP_K plus proches -> rapide et bon marche."""
+
 from __future__ import annotations
-import os
+
 import json
+import os
 import re
 
-from config import LLM_MODEL, LLM_API_KEY_ENV
+from config import LLM_API_KEY_ENV, LLM_MODEL
 
 
 def _api_key() -> str | None:
@@ -29,16 +31,14 @@ def arbitrer_llm(libelle: str, candidats: list[str], categorie: str = "") -> tup
     """Retourne (canonique choisi ou None, confiance)."""
     key = _api_key()
     if not key:
-        raise RuntimeError(
-            f"Cle API absente. Definissez une des variables {LLM_API_KEY_ENV} dans .env")
+        raise RuntimeError(f"Cle API absente. Definissez une des variables {LLM_API_KEY_ENV} dans .env")
 
-    from langchain_google_genai import ChatGoogleGenerativeAI
     from langchain_core.prompts import ChatPromptTemplate
+    from langchain_google_genai import ChatGoogleGenerativeAI
 
     llm = ChatGoogleGenerativeAI(model=LLM_MODEL, google_api_key=key)
     prompt = ChatPromptTemplate.from_messages([("system", SYSTEME), ("human", "{input}")])
-    entree = (f"Libelle facture : {libelle}\nCategorie probable : {categorie}\n"
-              f"Candidats : {candidats}")
+    entree = f"Libelle facture : {libelle}\nCategorie probable : {categorie}\nCandidats : {candidats}"
     resp = (prompt | llm).invoke({"input": entree})
     texte = getattr(resp, "content", None) or getattr(resp, "text", "")  # selon version LangChain
 

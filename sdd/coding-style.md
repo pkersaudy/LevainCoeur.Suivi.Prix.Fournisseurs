@@ -11,8 +11,8 @@ Formatters and linters enforce what they can.
 
 | Question | Rule |
 |---|---|
-| Formatter, linter | Ruff : `ruff format` et `ruff check`, largeur 120, `sdd/` exclu (mise en place : [issue](issues/ruff.md)) |
-| Indentation, line width | Python : 4 espaces, 120 colonnes (une seule ligne les dépasse aujourd'hui, sur 759) ; markdown prose wraps at 120, never tables, code blocks or URLs |
+| Formatter, linter | Ruff : `ruff format` et `ruff check`, largeur 120, `sdd/` exclu, version fixée dans `requirements-dev.txt` |
+| Indentation, line width | Python : 4 espaces, 120 colonnes ; markdown prose wraps at 120, never tables, code blocks or URLs |
 | Readability | first, concision second: as few lines as a clear reading allows, never fewer; no trick someone new to the language would trip on, name a helper instead |
 | Naming | `snake_case` pour fonctions et variables, `PascalCase` pour les classes, `MAJUSCULES` pour les constantes, `_` devant un helper privé ; a name says what it holds or does, and to what (`describe_error`, not `describe`); a mapping says what it maps (`seats_per_room`); a name is never cut to fit a line: split the line instead |
 | File layout | Réglages et chemins dans `config.py`, un extracteur par mise en page dans `pipeline/extractors/`, les points d'entrée à la racine ; a file reads top to bottom: its data structures, the entry point, then the helpers in the order it calls them |
@@ -65,6 +65,6 @@ and tests on the same subject share a file or a group. No micro test for each mi
 | Check | Command |
 |---|---|
 | Tests | `pytest -q --tb=short`, à partir du premier test : il n'y en a aucun aujourd'hui |
-| Linters | `ruff check . && ruff format --check .` |
+| Linters | `ruff check . && ruff format --check .`, après `pip install -r requirements-dev.txt` |
 | Moteur sans LLM | `python run.py --no-llm` |
 | SDD audit | `bash sdd/bin/sdd audit` |

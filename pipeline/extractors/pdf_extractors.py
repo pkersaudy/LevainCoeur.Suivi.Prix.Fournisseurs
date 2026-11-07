@@ -6,14 +6,17 @@ Les regex ci-dessous sont calees sur les factures fournies ; controlez la
 sortie sur vos vrais PDF et ajustez si besoin. Toute ligne non reconnue est
 renvoyee dans la file "a_valider.csv" plutot que perdue.
 """
+
 from __future__ import annotations
-from pathlib import Path
+
 import re
+from pathlib import Path
+
 import pdfplumber
 
 from .base_extractor import Extractor, Facture, LigneFacture
 
-NUM = r"-?\d[\d\s]*,\d+|-?\d+"          # nombre FR (virgule decimale)
+NUM = r"-?\d[\d\s]*,\d+|-?\d+"  # nombre FR (virgule decimale)
 
 
 def _f(s: str) -> float:
@@ -30,7 +33,8 @@ def _lignes_texte(pdf_path: Path) -> list[str]:
 
 
 class _PdfBase(Extractor):
-    marqueur = ""       # chaine caracterisant l'emetteur
+    marqueur = ""  # chaine caracterisant l'emetteur
+
     def peut_traiter(self, pdf_path: Path, texte_apercu: str) -> bool:
         return self.marqueur.upper() in texte_apercu.upper()
 
@@ -51,7 +55,8 @@ class MinoterieExtractor(_PdfBase):
             if "N° Pièce" in l or "Date" in l:
                 m = self.RE_DATE.search(l)
                 if m:
-                    date = m.group(1); break
+                    date = m.group(1)
+                    break
         fac = Facture(self.nom_fournisseur, date)
         for l in lignes:
             m = self.RE_LIGNE.match(l.strip())
@@ -63,12 +68,17 @@ class MinoterieExtractor(_PdfBase):
             # tail = PU_Brut [remise...] PU_Net Montant  -> PU_Net = avant-dernier
             pu_net = _f(nums[-2])
             montant = _f(nums[-1])
-            fac.lignes.append(LigneFacture(
-                designation=re.sub(r"\s*\*$", "", m.group("des")).strip(),
-                prix_unitaire_ht=pu_net, unite="kg",
-                fournisseur=self.nom_fournisseur, date_prix=date,
-                code_article=m.group("code"), montant_ht=montant,
-            ))
+            fac.lignes.append(
+                LigneFacture(
+                    designation=re.sub(r"\s*\*$", "", m.group("des")).strip(),
+                    prix_unitaire_ht=pu_net,
+                    unite="kg",
+                    fournisseur=self.nom_fournisseur,
+                    date_prix=date,
+                    code_article=m.group("code"),
+                    montant_ht=montant,
+                )
+            )
         return fac
 
 
@@ -84,8 +94,7 @@ class SuberyExtractor(_PdfBase):
 
     def extraire(self, pdf_path: Path) -> Facture:
         lignes = _lignes_texte(pdf_path)
-        date = next((self.RE_DATE.search(l).group(1) for l in lignes
-                     if self.RE_DATE.search(l)), "")
+        date = next((self.RE_DATE.search(l).group(1) for l in lignes if self.RE_DATE.search(l)), "")
         fac = Facture(self.nom_fournisseur, date)
         for l in lignes:
             m = self.RE_LIGNE.match(l)
@@ -94,17 +103,22 @@ class SuberyExtractor(_PdfBase):
             pu = _f(m.group("punet"))
             # suffixe K = deja au kg ; P = a la piece/barquette (a normaliser plus tard)
             unite = "kg" if m.group("suf") == "K" else "pièce"
-            fac.lignes.append(LigneFacture(
-                designation=m.group("des").strip(), prix_unitaire_ht=pu, unite=unite,
-                fournisseur=self.nom_fournisseur, date_prix=date,
-                montant_ht=_f(m.group("ht")),
-            ))
+            fac.lignes.append(
+                LigneFacture(
+                    designation=m.group("des").strip(),
+                    prix_unitaire_ht=pu,
+                    unite=unite,
+                    fournisseur=self.nom_fournisseur,
+                    date_prix=date,
+                    montant_ht=_f(m.group("ht")),
+                )
+            )
         return fac
 
 
 class CremerieExtractor(_PdfBase):
     nom_fournisseur = "Crèmerie de la Rance"
-    marqueur = "Cr" + "\u00e8" + "merie"   # "Crèmerie" (robuste a l'accent)
+    marqueur = "Cr" + "\u00e8" + "merie"  # "Crèmerie" (robuste a l'accent)
     # Code Description Unite(Litre/Kg) Qte PU_HT Montant TVA
     RE_LIGNE = re.compile(
         rf"^(?P<code>[A-Z]\d+)\s+(?P<des>.+?)\s+(?P<unite>Litre|Kg|Pièce|Piece)\s+"
@@ -114,8 +128,7 @@ class CremerieExtractor(_PdfBase):
 
     def extraire(self, pdf_path: Path) -> Facture:
         lignes = _lignes_texte(pdf_path)
-        date = next((self.RE_DATE.search(l).group(1) for l in lignes
-                     if self.RE_DATE.search(l)), "")
+        date = next((self.RE_DATE.search(l).group(1) for l in lignes if self.RE_DATE.search(l)), "")
         fac = Facture(self.nom_fournisseur, date)
         vus = set()
         for l in lignes:
@@ -123,13 +136,19 @@ class CremerieExtractor(_PdfBase):
             if not m:
                 continue
             des = m.group("des").strip()
-            if des in vus:            # la facture repete les memes lignes -> on dedoublonne
+            if des in vus:  # la facture repete les memes lignes -> on dedoublonne
                 continue
             vus.add(des)
             unite = {"Litre": "L", "Kg": "kg"}.get(m.group("unite"), m.group("unite").lower())
-            fac.lignes.append(LigneFacture(
-                designation=des, prix_unitaire_ht=_f(m.group("pu")), unite=unite,
-                fournisseur=self.nom_fournisseur, date_prix=date,
-                code_article=m.group("code"), montant_ht=_f(m.group("montant")),
-            ))
+            fac.lignes.append(
+                LigneFacture(
+                    designation=des,
+                    prix_unitaire_ht=_f(m.group("pu")),
+                    unite=unite,
+                    fournisseur=self.nom_fournisseur,
+                    date_prix=date,
+                    code_article=m.group("code"),
+                    montant_ht=_f(m.group("montant")),
+                )
+            )
         return fac
