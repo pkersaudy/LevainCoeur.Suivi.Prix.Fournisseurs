@@ -19,7 +19,7 @@ Formatters and linters enforce what they can.
 | Langue | Français partout, accents compris : commentaires, docstrings, messages, textes affichés, messages de commit. Noms de variables et de fonctions en français, sans accent. Un ancien commentaire sans accent se corrige quand son fichier est retouché |
 | Comments | in a language with docstrings, each function and class whose name does not say it all has one: what it does, then what it needs; a line that is not plain gets a short comment, saying why when the what is clear; no comment restating the code, no banner, no commented-out code |
 | Errors | Une configuration manquante lève une exception tout de suite, avec un message qui dit quoi faire. Une facture illisible n'arrête pas le lot : message `[!]` qui nomme le fichier, puis la suivante |
-| Command output | tests and builds print little when green and a short trace when red, since an agent reads every line: `pytest -q --tb=short`, `rspec --format progress`, `cargo test -q`, `vitest run --reporter=dot`; without such a flag, `bash sdd/bin/sdd quiet <command>` |
+| Command output | tests and builds print little when green and a short trace when red, since an agent reads every line: `pytest -q --tb=short`, `rspec --format progress`, `cargo test -q`, `vitest run --reporter=dot`; without such a flag, `bash sdd/bin/sdd quiet <command>`. A command whose output may be long is bounded from its first call: `git diff --stat` before the diff, `grep`, `head`, `tail` or `cut` rather than a whole file |
 | Diagrams | Mermaid, one per topic |
 | Commit messages | what the batch does and, when it is not obvious, why |
 
