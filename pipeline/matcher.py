@@ -1,30 +1,22 @@
 """Rapprochement en cascade d'un libellé fournisseur vers une matière de base :
 
     1. alias exact      (dictionnaire, gratuit, déterministe)   -> méthode "alias"
-    2. LLM              (candidats d'embeddings, confiance >= SEUIL_CONFIANCE_LLM) -> méthode "llm"
+    2. LLM              (candidats par n-grammes, confiance >= SEUIL_CONFIANCE_LLM) -> méthode "llm"
     3. sinon            -> "review" (file a_valider.csv)
 
-Les embeddings ne valident rien : ils proposent des candidats au LLM ou au boulanger.
+Le score de proximité ne valide rien : il propose des candidats au LLM ou au boulanger.
 Seule la revue humaine crée un alias, l'erreur d'une machine ne se propage pas à 1,00.
 """
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from dataclasses import dataclass
 
 import pandas as pd
 
-from config import ALIAS_CSV, BASE_CSV, CSV_DECIMAL, CSV_ENCODING, CSV_SEP, SEUIL_CONFIANCE_LLM, SEUIL_LLM, TOP_K
+from config import ALIAS_CSV, BASE_CSV, CSV_DECIMAL, CSV_ENCODING, CSV_SEP, SEUIL_CONFIANCE_LLM, TOP_K
 
-from .embeddings import IndexSemantique
-
-
-def norm(s: str) -> str:
-    s = str(s or "").strip().lower()
-    s = "".join(c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn")
-    return re.sub(r"[^a-z0-9]+", " ", s).strip()
+from .candidats import IndexCandidats, norm
 
 
 @dataclass
@@ -51,8 +43,8 @@ class Matcher:
         )
         self.alias_index = {norm(a): c for a, c in zip(self.alias["Alias fournisseur"], self.alias["Matière de base"])}
 
-        # index sémantique = canoniques + alias (révectorisation incrémentale)
-        self.index = IndexSemantique()
+        # index des candidats = canoniques + alias
+        self.index = IndexCandidats()
         paires = [(c, c) for c in self.canoniques]
         paires += [
             (a, c) for a, c in zip(self.alias["Alias fournisseur"], self.alias["Matière de base"]) if isinstance(a, str)
@@ -66,9 +58,9 @@ class Matcher:
         if c:
             return Resultat(c, "alias", 1.0, "matched", [])
 
-        # 2) LLM sur la short-list d'embeddings
+        # 2) LLM sur la short-list des plus proches
         cands = self.index.chercher(libelle, TOP_K)
-        if utiliser_llm and self.llm_disponible and cands and cands[0][1] >= SEUIL_LLM:
+        if utiliser_llm and self.llm_disponible:
             from .llm import LlmIndisponible, arbitrer_llm
 
             try:
@@ -82,10 +74,10 @@ class Matcher:
                     return Resultat(choix, "llm", conf, "matched", cands)
 
         # 3) revue humaine
-        return Resultat(None, "review", cands[0][1] if cands else 0.0, "review", cands)
+        return Resultat(None, "review", cands[0][1], "review", cands)
 
     def apprendre_alias(self, libelle: str, canonique: str, fournisseur: str, methode: str):
-        """Ajoute un alias validé au dictionnaire + à l'index (incrémental)."""
+        """Ajoute un alias validé au dictionnaire + à l'index."""
         if norm(libelle) in self.alias_index:
             return
         self.alias_index[norm(libelle)] = canonique

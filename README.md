@@ -9,19 +9,17 @@ Pour chaque ligne de facture, le libellé fournisseur est rapproché d'une mati�
 de base en 3 étages, du moins cher au plus cher :
 
 1. **Alias exact** — dictionnaire `data/dictionnaire_alias.csv`. Gratuit, déterministe, éditable à la main.
-2. **LLM** — choisit **seulement** parmi les 5 candidats les plus proches trouvés par les embeddings (RAG), retenu si
-   sa confiance est ≥ `SEUIL_CONFIANCE_LLM`. Les embeddings seuls ne valident rien.
+2. **LLM** — choisit **seulement** parmi les 10 candidats les plus proches par n-grammes de caractères (RAG), retenu
+   si sa confiance est ≥ `SEUIL_CONFIANCE_LLM`. Le score de proximité seul ne valide rien.
 3. **Revue humaine** — sinon, la ligne part dans `data/a_valider.csv`.
 
 Un choix du LLM va en base **et** reste dans `data/a_valider.csv`, en catégorie `llm matched`. Seule la revue humaine
 **crée un alias** : une erreur de la machine ne devient jamais une vérité à 1,00, et un libellé validé est reconnu
 exactement la fois suivante.
 
-### Revectorisation incrémentale
-L'index sémantique = noms canoniques **+** tous les alias connus. Les vecteurs
-sont mis en cache (`data/embeddings_cache.parquet`). À chaque lancement, **seuls
-les nouveaux alias** (ceux que vous venez d'ajouter au dictionnaire) sont encodés
-et ajoutés à l'index. On ne ré-encode jamais tout.
+### Index des candidats
+L'index = noms canoniques **+** tous les alias connus, reconstruit en mémoire à chaque lancement : un alias ajouté au
+dictionnaire compte tout de suite, sans cache ni modèle à télécharger.
 
 ## Installation
 ```bash
@@ -58,13 +56,13 @@ ligne reste à la pièce/barquette (colonne *Unité de mesure*).
 
 ## Arborescence
 ```
-config.py                 seuils, chemins, modèle
+config.py                 seuils, chemins, modèle LLM
 run.py                    point d'entrée (traite un dossier)
 review.py                 validation humaine + apprentissage d'alias
 pipeline/
   router.py               détection fournisseur -> extracteur
-  matcher.py              cascade alias -> LLM sur candidats d'embeddings -> revue
-  embeddings.py           index sémantique + cache incrémental
+  matcher.py              cascade alias -> LLM sur les candidats -> revue
+  candidats.py            index des candidats par n-grammes
   llm.py                  fallback Claude Haiku (short-list RAG)
   normalize.py            prix -> €/kg
   writer.py               écriture base + file de revue
@@ -72,6 +70,5 @@ pipeline/
 data/
   base_prix_matieres_premieres.csv
   dictionnaire_alias.csv
-  embeddings_cache.parquet   (généré)
   a_valider.csv              (généré)
 ```

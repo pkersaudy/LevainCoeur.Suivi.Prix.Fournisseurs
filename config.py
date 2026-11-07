@@ -7,7 +7,6 @@ ROOT = Path(__file__).resolve().parent
 DATA = ROOT / "data"
 BASE_CSV = DATA / "base_prix_matieres_premieres.csv"  # base longue (historique de prix)
 ALIAS_CSV = DATA / "dictionnaire_alias.csv"  # dictionnaire d'alias (éditable à la main)
-EMB_CACHE = DATA / "embeddings_cache.parquet"  # cache des vecteurs (incrémentale)
 REVIEW_CSV = DATA / "a_valider.csv"  # file d'attente de revue humaine
 INBOX = ROOT / "factures_a_traiter"  # déposez vos PDF ici
 
@@ -17,11 +16,8 @@ CSV_DECIMAL = ","
 CSV_ENCODING = "utf-8-sig"
 
 # --- Matching ---
-# Modèle d'embeddings multilingue (bon en français, tourne en local, gratuit)
-EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-TOP_K = 5  # nb de candidats proposés au LLM
-SEUIL_LLM = 0.55  # cosinus >= : on demande au LLM ; en dessous, direct file de revue (probablement "new")
-SEUIL_CONFIANCE_LLM = 0.80  # confiance du LLM < : file de revue
+TOP_K = 10  # nb de candidats proposés au LLM
+SEUIL_CONFIANCE_LLM = 0.90  # confiance du LLM < : file de revue
 
 # --- File de revue ---
 CATEGORIE_LLM = "llm matched"  # déjà en base, le boulanger la valide ou la corrige

@@ -77,7 +77,5 @@ Chacune tranchée passe dans `decisions.md` et sort d'ici.
 2. Créer les colonnes Minoterie du Château et Subéry Claude et Fils dans le fichier (recommandé) ?
 3. Interface : application web locale en Python ouverte dans le navigateur, qui réutilise le moteur existant
    (recommandé), ou application de bureau ?
-4. Embeddings : `sentence-transformers` installe PyTorch, lourd pour le PC du boulanger ; une bibliothèque ONNX plus
-   légère est à mesurer avant de choisir.
-5. La base longue `data/base_prix_matieres_premieres.csv` devient-elle le journal des prix validés, ou disparaît-elle
+4. La base longue `data/base_prix_matieres_premieres.csv` devient-elle le journal des prix validés, ou disparaît-elle
    au profit des commentaires du fichier ?

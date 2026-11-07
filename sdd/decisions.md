@@ -8,9 +8,7 @@
 
 3. Superseded by 10.
 
-4. **Le dictionnaire d'alias est la vérité éditable, les vecteurs ne sont qu'un cache.** Chaque rapprochement validé
-   devient un alias ; seuls les textes nouveaux sont vectorisés. Rejected: des « colonnes de synonymes vectorisées » à
-   éditer, des vecteurs ne se lisent ni ne se corrigent.
+4. Superseded by 11.
 
 5. **Aucun prix écrit sans validation humaine, facture à l'appui.** Juin 2026 a montré une erreur de facturation (filet
    de poulet Distralis à 14,927 €/kg au lieu de 8,55 €/kg, réglée par avoir) et des conditionnements trompeurs.
@@ -39,16 +37,26 @@
    factures avec un LLM sur le texte brut (prototype `multiagentapp.py` : coûteux, non déterministe, invente ou perd des
    lignes).
 
-10. **Rapprochement en cascade : alias exact, puis LLM sur les 5 candidats les plus proches trouvés par les embeddings,
-    puis le boulanger. Les embeddings ne valident rien, et un choix du LLM sous 0,80 de confiance part en revue. À 0,80
-    ou plus, il va en base et reste en revue, en catégorie `llm matched`. Seule la revue humaine crée un alias : `oui`
-    valide le choix, une autre matière corrige la ligne de base.** Les libellés fournisseurs sont trop loin des noms du fichier pour une distance de
-    caractères : « Herbe Cello Menthe 30g France » pour « Menthe fraiche », « FAR. BLE BIO MEULE BISE FR 25 KG » pour
-    « Blé Bio Meule Bise T80 ». Le 2026-11-07, sur les 65 premières lignes réelles, 6 des 8 premières lignes acceptées
-    par les embeddings étaient fausses (`JAUNE OEUF` -> `Blanc d'oeuf liquide`, `Panais` -> `Rhurbarbe` à 0,95) et les 4
-    choix du LLM à 0,60 étaient tous douteux ; un alias appris automatiquement rejouait ensuite l'erreur à 1,00.
-    Rejected: `thefuzz` seul (prototype, seuil 80) ; tout confier au LLM (coût, résultats variables) ; un graphe
-    LangGraph multi-agents (le flux est linéaire, 10 factures par mois ne le justifient pas) ; garder une acceptation
-    par embeddings à un seuil plus haut (`Cat.1 France` pèse plus que le produit, l'erreur se mesure à 0,95) ; ne jamais
-    faire d'un choix du LLM un alias (tout reste en LLM, aucun exact à terme) ; valider en recopiant le nom (plus de
-    saisie, la colonne `Valide (oui)` a été préférée par le boulanger).
+10. Superseded by 11.
+
+11. **Rapprochement en cascade : alias exact, puis LLM sur les 10 candidats les plus proches par n-grammes de
+    caractères, puis le boulanger. Le score de proximité ne valide rien, et un choix du LLM sous 0,90 de confiance part
+    en revue. À 0,90 ou plus, il va en base et reste en revue, en catégorie `llm matched`. Seule la revue humaine crée
+    un alias : `oui` valide le choix, une autre matière corrige la ligne de base. Le dictionnaire d'alias est la seule
+    vérité éditable : l'index se reconstruit en mémoire depuis la base et le dictionnaire, sans cache.** Le 2026-11-07,
+    sur 70 libellés hors alias, boissons et consommables exclus, dont 46 ont une matière selon le boulanger : les
+    n-grammes mettent la bonne matière dans les 10 premiers candidats pour les 46 (rang 7 au pire), les embeddings
+    `paraphrase-multilingual-MiniLM-L12-v2` pour 19 des 43 premiers étiquetés (`SUCRE GLACE` au rang 157). Avec Claude
+    Haiku 5.5, au seuil de 0,90 : 29 justes, aucun faux, 1 seul choix accepté parmi les 24 sans matière ; au seuil de
+    0,80 : 35 justes, 2 faux, 4 acceptés à tort (`BATONNET FUME` -> `Saumon fumé TR`). Un alias validé fait venir sa
+    matière en tête pour les libellés voisins : les 3 `OEUF ECALE` vont à `Oeuf seau 75/120` dès que l'un est validé.
+    Rejected: les embeddings (rappel ci-dessus, PyTorch de 809 Mo à installer, cache de vecteurs à purger quand un alias
+    disparaît) ; une base vectorielle (327 textes, 0,03 ms par recherche, le stockage n'était pas en cause) ; mélanger
+    embeddings et n-grammes (26 sur 43 dans les 5 premiers, contre 42) ; envoyer les 294 matières au LLM (38 justes
+    contre 37 à 0,80, 7 fois plus de jetons, et plus de candidats pour le boulanger sans LLM) ; montrer au LLM les
+    libellés déjà validés de chaque candidat (32 justes contre 29 à 0,90, mais `Persil Plat` -> `Persil surg` accepté à
+    0,90) ; garder un seuil bas avant le LLM (le score n'a plus la même échelle, et une ligne de plus coûte environ un
+    centième de centime) ; `thefuzz` seul (prototype, seuil 80) ; un graphe LangGraph multi-agents (le flux est
+    linéaire) ; ne jamais faire d'un choix du LLM un alias (tout reste en LLM, aucun exact à terme) ; des « colonnes de
+    synonymes vectorisées » à éditer (des vecteurs ne se lisent ni ne se corrigent) ; valider en recopiant le nom (plus
+    de saisie, la colonne `Valide (oui)` a été préférée par le boulanger).

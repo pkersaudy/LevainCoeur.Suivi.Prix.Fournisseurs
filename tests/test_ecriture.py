@@ -46,7 +46,7 @@ def fichiers(tmp_path, monkeypatch):
     monkeypatch.setattr(matcher, "BASE_CSV", base)
     monkeypatch.setattr(matcher, "ALIAS_CSV", alias)
     monkeypatch.setattr(review, "REVIEW_CSV", file_revue)
-    monkeypatch.setattr(matcher, "IndexSemantique", IndexFactice)
+    monkeypatch.setattr(matcher, "IndexCandidats", IndexFactice)
     return SimpleNamespace(base=base, alias=alias, file_revue=file_revue)
 
 

@@ -5,11 +5,10 @@ lxml>=5.0
 
 # Donnees
 pandas>=2.0
-pyarrow>=15.0          # cache d'embeddings au format parquet
 numpy>=1.26
 
-# Matching semantique (local, gratuit)
-sentence-transformers>=3.0
+# Candidats par n-grammes de caracteres
+scikit-learn>=1.4
 
 # LLM de secours
 anthropic>=2.0

@@ -8,7 +8,6 @@ __pycache__/
 venv/
 
 # Données générées (garder sous la main mais hors versionnement)
-data/embeddings_cache.parquet
 data/a_valider.csv
 
 # PDF déposés à traiter

@@ -1,5 +1,5 @@
-"""LLM de secours : arbitre uniquement les cas ambigus, avec la short-list
-d'embeddings comme candidats (RAG). Ne voit jamais les 130 matières, seulement
+"""LLM de secours : arbitre les libellés sans alias, avec la short-list des matières
+les plus proches comme candidats (RAG). Ne voit jamais toutes les matières, seulement
 les TOP_K plus proches -> rapide et bon marché."""
 
 from __future__ import annotations

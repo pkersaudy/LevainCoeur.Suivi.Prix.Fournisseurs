@@ -11,7 +11,7 @@ from pipeline.llm import arbitrer_llm
 
 
 class IndexFactice:
-    """Renvoie un candidat dans la zone d'arbitrage du LLM."""
+    """Renvoie un seul candidat, sans calcul."""
 
     def synchroniser(self, paires):
         pass
@@ -50,7 +50,7 @@ def service(monkeypatch):
 @pytest.fixture
 def moteur(monkeypatch):
     """Moteur sans dictionnaire ni base, avec l'index factice."""
-    monkeypatch.setattr(matcher, "IndexSemantique", IndexFactice)
+    monkeypatch.setattr(matcher, "IndexCandidats", IndexFactice)
     monkeypatch.setattr(matcher.pd, "read_csv", lambda *_, **__: pd.DataFrame(columns=COLONNES))
     return matcher.Matcher()
 
@@ -87,7 +87,7 @@ def test_service_indisponible_envoie_le_lot_en_revue_sans_rappeler(moteur, servi
 
 @pytest.mark.parametrize(
     ("confiance", "statut"),
-    [(0.79, "review"), (0.80, "matched")],
+    [(0.89, "review"), (0.90, "matched")],
 )
 def test_un_choix_du_llm_sous_le_seuil_de_confiance_part_en_revue(moteur, service, confiance, statut):
     service(lambda: reponse(f'{{"matiere_matched": "Carottes", "confiance": {confiance}}}'))
@@ -95,7 +95,7 @@ def test_un_choix_du_llm_sous_le_seuil_de_confiance_part_en_revue(moteur, servic
     assert moteur.matcher("Carotte 5 kg").statut == statut
 
 
-def test_un_score_d_embeddings_eleve_ne_valide_rien(moteur, monkeypatch):
+def test_un_score_de_proximite_eleve_ne_valide_rien(moteur, monkeypatch):
     monkeypatch.setattr(moteur.index, "chercher", lambda *_: [("Rhurbarbe", 0.95)])
 
     resultat = moteur.matcher("Panais", utiliser_llm=False)
@@ -103,7 +103,7 @@ def test_un_score_d_embeddings_eleve_ne_valide_rien(moteur, monkeypatch):
     assert (resultat.canonique, resultat.statut) == (None, "review")
 
 
-def test_un_score_d_embeddings_eleve_passe_par_le_llm(moteur, service, monkeypatch):
+def test_un_score_de_proximite_eleve_passe_par_le_llm(moteur, service, monkeypatch):
     service(lambda: reponse('{"matiere_matched": "AUCUNE", "confiance": 0.9}'))
     monkeypatch.setattr(moteur.index, "chercher", lambda *_: [("Rhurbarbe", 0.95)])
 
